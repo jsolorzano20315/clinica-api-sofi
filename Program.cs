@@ -23,9 +23,7 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(
             "http://localhost:5173",
             "http://localhost:5174",
-            "http://soficlinica.somee.com",
-            "https://dulcet-froyo-c0669f.netlify.app",
-            "https://sage-crostata-dc26df.netlify.app"
+            "https://clinica-api-sofi.onrender.com/"
         )
         .AllowAnyHeader()
         .AllowAnyMethod();
@@ -113,7 +111,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 // 🔥 IMPORTANTE PARA CLOUD (Render, Azure, etc.)
-var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
-app.Urls.Add($"http://0.0.0.0:{port}");
+//var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
+//app.Urls.Add($"http://0.0.0.0:{port}");
 
 app.Run();
