@@ -1,0 +1,18 @@
+# Visual Studio
+.vs/
+bin/
+obj/
+
+# Logs
+*.log
+
+# User files
+*.user
+*.suo
+
+# Build
+bin/
+obj/
+
+# VS Code
+.vscode/
