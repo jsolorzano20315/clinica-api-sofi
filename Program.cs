@@ -23,9 +23,7 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(
             "http://localhost:5173",
             "http://localhost:5174",
-            "http://soficlinica.somee.com",
-            "https://dulcet-froyo-c0669f.netlify.app",
-            "https://sage-crostata-dc26df.netlify.app"
+           "https://clinica-app-sofi.vercel.app"
         )
         .AllowAnyHeader()
         .AllowAnyMethod();
@@ -87,6 +85,7 @@ builder.Services.AddSingleton<AuthService>();
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+app.UseCors("AllowFrontend");
 
 app.MapGet("/", () => "Clinica API funcionando");
 
