@@ -23,11 +23,12 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(
             "http://localhost:5173",
             "http://localhost:5174",
-            "https://clinica-api-sofi.onrender.com/"
+            "https://clinica-api-sofi.onrender.com/",
+            "https://clinica-app-sofi.vercel.app"
         )
         .AllowAnyHeader()
-        .AllowAnyMethod();
-        //.AllowCredentials();
+        .AllowAnyMethod()
+        .AllowCredentials();
     });
 });
 
@@ -101,7 +102,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // 👇 IMPORTANTE: CORS antes de auth
-//app.UseRouting();
+app.UseRouting();
 
 app.UseCors(MyAllowOrigins);
 //////app.UseHttpsRedirection();
@@ -111,7 +112,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 // 🔥 IMPORTANTE PARA CLOUD (Render, Azure, etc.)
-//var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
-//app.Urls.Add($"http://0.0.0.0:{port}");
+var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
+app.Urls.Add($"http://0.0.0.0:{port}");
 
 app.Run();
