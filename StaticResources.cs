@@ -297,7 +297,7 @@
         public static string QueryTotalCitasConfirmado = @"                        					
 			SELECT COUNT(*) AS Total 
                             FROM [dbo].[Citas]
-                            WHERE Clinica = 'Clinica Centro Medico la Esperanza'
+                            WHERE Clinica = @Clinica
                                   AND Estado = 'Confirmada' 
                                   AND YEAR(Fecha) = YEAR(GETDATE())
 		                  ";
@@ -306,7 +306,7 @@
         public static string QueryTotalCitasPendiente = @"                         					
 			  SELECT COUNT(*) AS Total 
                             FROM [dbo].[Citas]
-                            WHERE Clinica = 'Clinica Centro Medico la Esperanza'
+                            WHERE Clinica = @Clinica
                                   AND Estado = 'Pendiente' 
                                   AND YEAR(Fecha) = YEAR(GETDATE())
 		                  ";
@@ -315,7 +315,7 @@
         public static string QueryTotalCitasCanceladas = @"                         						
               SELECT COUNT(*) AS Total 
                             FROM [dbo].[Citas]
-                            WHERE Clinica = 'Clinica Centro Medico la Esperanza'
+                            WHERE Clinica = @Clinica
                                   AND Estado = 'Cancelado' 
                                   AND YEAR(Fecha) = YEAR(GETDATE())
 		                  ";
