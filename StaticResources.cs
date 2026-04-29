@@ -251,6 +251,24 @@
                 ,@Total)
 		                  ";
 
+        //Listar Facturas
+        public static string QueryListarFactura = @"                       					
+			SELECT  a.Id,
+                    a.Fecha,
+		            b.Nombre + ' ' + b.Apellido AS Paciente,
+		            c.Motivo,
+	                a.PrecioUnitario,
+		            a.Total
+            FROM [dbo].[Factura] a, [dbo].[Paciente] b, [dbo].[Citas] c
+            WHERE 1 = 1
+	            and a.Clinica = b.Clinica
+	            and a.Clinica = C.Clinica
+                and b.Clinica = C.Clinica
+	            and a.PacienteId = b.Id
+	            and a.PacienteId = c.PacienteId
+                and a.Clinica = @Clinica)
+		                  ";
+
         #endregion
 
         #region REPORTES CITAS  
@@ -316,7 +334,7 @@
               SELECT COUNT(*) AS Total 
                             FROM [dbo].[Citas]
                             WHERE Clinica = @Clinica
-                                  AND Estado = 'Cancelado' 
+                                  AND Estado = 'Cancelada' 
                                   AND YEAR(Fecha) = YEAR(GETDATE())
 		                  ";
 
