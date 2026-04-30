@@ -244,11 +244,13 @@
 			INSERT INTO [dbo].[Factura]
                    ([PacienteId]
                    ,[Fecha]
-                   ,[Total])
+                   ,[Total]
+                   ,[Clinica])
              VALUES
                 (@PacienteId
                 ,@Fecha
-                ,@Total)
+                ,@Total
+                ,@Clinica)
 		                  ";
 
         //Listar Facturas

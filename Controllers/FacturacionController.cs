@@ -37,6 +37,7 @@ namespace ClinicaAPI.Controllers
             parameters.Add("@PacienteId", model.PacienteId);
             parameters.Add("@Fecha", model.Fecha);
             parameters.Add("@Total", model.Total);
+            parameters.Add("@Clinica", model.Clinica); 
 
             using var connection = new System.Data.SqlClient.SqlConnection(Configuration.GetConnectionString("EntitiesContext"));
             result = (await connection.QueryAsync<Doctor>(query.ToString(), parameters)).ToList();
