@@ -370,5 +370,37 @@
 							";
 
         #endregion
+
+        #region REPORTES CITAS   
+
+        //Historial Clinico por Pacientes, fecha inicio y fecha fin
+        public static string QueryVerHistorialClinico = @"                          							
+              SELECT 
+                CONCAT(b.[Nombre], ' ', b.[Apellido]) AS NombrePaciente,
+                b.[Telefono],
+                STRING_AGG(
+                    CONCAT(
+                        a.Motivo, 
+                        ' (', 
+                        FORMAT(a.Fecha, 'dd/MM/yyyy'), 
+                        ')'
+                    ), 
+                    ', '
+                ) WITHIN GROUP (ORDER BY a.Fecha DESC) AS Motivos,
+                MAX(a.Fecha) AS UltimaFechaCita ,
+                COUNT(a.Id) AS TotalCitas,
+                a.Clinica
+            FROM [dbo].[Citas] a
+            JOIN [dbo].[Paciente] b ON a.PacienteId = b.Id
+            WHERE a.Clinica = @Clinica  
+            GROUP BY 
+                b.Nombre, 
+                b.Apellido,
+                b.Telefono,
+                a.Clinica     
+            ORDER BY UltimaFechaCita DESC
+		                  ";
+
+        #endregion
     }
 }

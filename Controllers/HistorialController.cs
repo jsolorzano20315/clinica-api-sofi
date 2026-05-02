@@ -1,5 +1,9 @@
-﻿using ClinicaAPI.Data;
+﻿using System.Text;
+using ClinicaAPI.Data;
+using ClinicaAPI.DTOs;
 using ClinicaAPI.Models;
+using ClinicaAPI.Services;
+using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,26 +12,39 @@ namespace ClinicaAPI.Controllers
     [ApiController]
     [Route("api/[controller]")] 
     public class HistorialController : ControllerBase
-    { 
-        private readonly ClinicaContext _context;
-
-        public HistorialController(ClinicaContext context) 
+    {
+        private readonly AuthService _authService;
+        public HistorialController(IConfiguration configuration, AuthService authService) 
         {
-            _context = context;
+            Configuration = configuration;
+            _authService = authService ?? throw new ArgumentNullException(nameof(authService));
         }
 
-        [HttpGet]
-        public async Task<IEnumerable<Historial>> Get()
+        public IConfiguration Configuration { get; }
+
+        [HttpGet()]
+        [Route("HistorialClinico/{clinica}")]
+        public async Task<IActionResult> HistorialClinico(string clinica) 
         {
-            return await _context.Historiales.ToListAsync();
+
+            var userName = User.Identity?.Name ?? "Anonimo";
+
+            List<HistorialClinicoDto> result;
+            var query = new StringBuilder();
+
+            query.AppendLine(StaticResources.QueryVerHistorialClinico);
+
+            DynamicParameters parameters = new DynamicParameters();
+
+            parameters.Add("@Clinica", clinica);
+
+            using var connection = new System.Data.SqlClient.SqlConnection(Configuration.GetConnectionString("EntitiesContext"));
+            result = (await connection.QueryAsync<HistorialClinicoDto>(query.ToString(), parameters)).ToList();
+
+            return Ok(result ?? new List<HistorialClinicoDto>());
+
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Post(Historial historial)
-        {
-            _context.Historiales.Add(historial);
-            await _context.SaveChangesAsync();
-            return Ok(historial);
-        }
     }
 }
+
