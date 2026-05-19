@@ -13,27 +13,13 @@ namespace ClinicaAPI.Services
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly IConfiguration _config;
+        private readonly ILogger<WhatsAppSchedulerService> _logger;
 
-        public WhatsAppSchedulerService(
-            IServiceScopeFactory scopeFactory,
-            IConfiguration config)
-        {
-            _scopeFactory = scopeFactory;
-            _config = config;
-        }
+        public WhatsAppSchedulerService(IServiceScopeFactory scopeFactory, IConfiguration config, ILogger<WhatsAppSchedulerService> logger) { _scopeFactory = scopeFactory; _config = config; _logger = logger; }
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                await ProcesarCitas();
-                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
-            }
-        }
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken) { _logger.LogInformation("🔥 WhatsAppSchedulerService iniciado"); while (!stoppingToken.IsCancellationRequested) { try { _logger.LogInformation("⏰ Procesando citas..."); await ProcesarCitas(); _logger.LogInformation("✅ Proceso finalizado"); } catch (Exception ex) { _logger.LogError(ex, "❌ Error en scheduler"); } await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken); } }
 
         private async Task ProcesarCitas()
-        
-        
         {
             var clinica = _config["Clinica"]; // opcional si lo usas
 
@@ -70,10 +56,10 @@ namespace ClinicaAPI.Services
                 var apiBaseUrl = _config["ApiBaseUrl"];
 
                 var urlConfirmar =
-                    $"{apiBaseUrl}/api/citas/confirmar/{cita.Id}";
+                    $"Cita Confirmada: {apiBaseUrl}/api/citas/confirmar/{cita.Id}";
 
                 var urlCancelar =
-                    $"{apiBaseUrl}/api/citas/cancelar/{cita.Id}";
+                    $"Cita cancelada: {apiBaseUrl}/api/citas/cancelar/{cita.Id}";
 
 
                 var urlWhatsAppConfirmar = 
@@ -108,16 +94,22 @@ namespace ClinicaAPI.Services
             using var client = new HttpClient();
 
             var body = new Dictionary<string, string>
-            {
-                { "token", token },
-                { "to", telefono.Replace("+", "") },
-                { "body", mensaje }
-            };
+                {
+                    { "token", token },
+                    { "to", telefono.Replace("+", "") },
+                    { "body", mensaje }
+                };
 
-            await client.PostAsync(
+            var response = await client.PostAsync(
                 $"https://api.ultramsg.com/{instanceId}/messages/chat",
                 new FormUrlEncodedContent(body)
             );
+
+            var result = await response.Content.ReadAsStringAsync();
+
+            Console.WriteLine(result);
+
+            response.EnsureSuccessStatusCode();
         }
     }
 }

@@ -245,15 +245,54 @@ namespace ClinicaAPI.Controllers
                 WHERE Id = @Id
             ", new { Id = id });
 
-                    return Content($@"
+            return Content($@"
                 <html>
-                    <body style='font-family:Arial;text-align:center;padding-top:40px;'>
-                        <h2>✅ Cita confirmada</h2>
-                        <p>Gracias {cita.NombreCompleto}</p>
-                        <p>Su cita fue confirmada correctamente.</p>
-                    </body>
+                <head>
+                    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                </head>
+
+                <body style='
+                    font-family: Arial;
+                    background-color:#f5f5f5;
+                    margin:0;
+                    padding:20px;
+                '>
+
+                    <div style='
+                        max-width:400px;
+                        margin:auto;
+                        background:white;
+                        padding:30px;
+                        border-radius:12px;
+                        text-align:center;
+                        box-shadow:0 2px 10px rgba(0,0,0,0.1);
+                    '>
+
+                        <div style='font-size:60px;'>❌</div>
+
+                        <h2 style='color:#d32f2f;'>
+                            Cita Confirmada
+                        </h2>
+
+                        <p style='font-size:18px;'>
+                            Gracias <strong>{cita.NombreCompleto}</strong>
+                        </p>
+
+                        <p style='color:#555;'>
+                            Su cita fue confirmada correctamente.
+                        </p>
+
+                        <hr style='margin:25px 0;'>
+
+                        <p style='font-size:14px;color:gray;'>
+                            {cita.Clinica}
+                        </p>
+
+                    </div>
+
+                </body>
                 </html>
-            ", "text/html");
+                ", "text/html");
         }
 
         [HttpGet("cancelar/{id}")]
@@ -287,13 +326,52 @@ namespace ClinicaAPI.Controllers
 
             return Content($@"
                 <html>
-                    <body style='font-family:Arial;text-align:center;padding-top:40px;'>
-                        <h2>❌ Cita cancelada</h2>
-                        <p>Gracias {cita.NombreCompleto}</p>
-                        <p>Su cita fue cancelada correctamente.</p>
-                    </body>
+                <head>
+                    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                </head>
+
+                <body style='
+                    font-family: Arial;
+                    background-color:#f5f5f5;
+                    margin:0;
+                    padding:20px;
+                '>
+
+                    <div style='
+                        max-width:400px;
+                        margin:auto;
+                        background:white;
+                        padding:30px;
+                        border-radius:12px;
+                        text-align:center;
+                        box-shadow:0 2px 10px rgba(0,0,0,0.1);
+                    '>
+
+                        <div style='font-size:60px;'>❌</div>
+
+                        <h2 style='color:#d32f2f;'>
+                            Cita Cancelada
+                        </h2>
+
+                        <p style='font-size:18px;'>
+                            Gracias <strong>{cita.NombreCompleto}</strong>
+                        </p>
+
+                        <p style='color:#555;'>
+                            Su cita fue cancelada correctamente.
+                        </p>
+
+                        <hr style='margin:25px 0;'>
+
+                        <p style='font-size:14px;color:gray;'>
+                            {cita.Clinica}
+                        </p>
+
+                    </div>
+
+                </body>
                 </html>
-            ", "text/html");
+                ", "text/html");
         }
     }
 }
