@@ -5,6 +5,7 @@ using ClinicaAPI.Services;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Data.SqlClient;
 using System.Text;
 
@@ -15,6 +16,7 @@ namespace ClinicaAPI.Controllers
     public class CitasController : ControllerBase
     {
         private readonly AuthService _authService;
+
         public CitasController(IConfiguration configuration, AuthService authService) 
         {
             Configuration = configuration;
@@ -211,6 +213,87 @@ namespace ClinicaAPI.Controllers
 
             return Ok(result);
 
+        }
+
+
+        [HttpGet("confirmar/{id}")]
+        public async Task<IActionResult> ConfirmarCita(int id)
+        {
+            using var connection = new SqlConnection(
+                Configuration.GetConnectionString("EntitiesContext")
+            );
+
+            var cita = await connection.QueryFirstOrDefaultAsync<CitaDto>(@"
+                SELECT
+                    a.Id,
+                    a.Fecha,
+                    a.Estado,
+                    b.Telefono,
+                    CONCAT(b.Nombre, ' ', b.Apellido) AS NombreCompleto
+                FROM Citas a
+                INNER JOIN Paciente b ON a.PacienteId = b.Id
+                WHERE a.Id = @Id
+            ", new { Id = id });
+
+                    if (cita == null)
+                        return NotFound("Cita no encontrada");
+
+                    await connection.ExecuteAsync(@"
+                UPDATE Citas
+                SET Estado = 'Confirmada',
+                    FechaConfirmacion = GETDATE()
+                WHERE Id = @Id
+            ", new { Id = id });
+
+                    return Content($@"
+                <html>
+                    <body style='font-family:Arial;text-align:center;padding-top:40px;'>
+                        <h2>✅ Cita confirmada</h2>
+                        <p>Gracias {cita.NombreCompleto}</p>
+                        <p>Su cita fue confirmada correctamente.</p>
+                    </body>
+                </html>
+            ", "text/html");
+        }
+
+        [HttpGet("cancelar/{id}")]
+        public async Task<IActionResult> CancelarCita(int id)
+        {
+            using var connection = new SqlConnection(
+                Configuration.GetConnectionString("EntitiesContext")
+            );
+
+            var cita = await connection.QueryFirstOrDefaultAsync<CitaDto>(@"
+                SELECT
+                    a.Id,
+                    a.Fecha,
+                    a.Estado,
+                    b.Telefono,
+                    CONCAT(b.Nombre, ' ', b.Apellido) AS NombreCompleto
+                FROM Citas a
+                INNER JOIN Paciente b ON a.PacienteId = b.Id
+                WHERE a.Id = @Id
+            ", new { Id = id });
+
+            if (cita == null)
+                return NotFound("Cita no encontrada");
+
+            await connection.ExecuteAsync(@"
+                UPDATE Citas
+                SET Estado = 'Cancelada',
+                    FechaCancelacion = GETDATE()
+                WHERE Id = @Id
+            ", new { Id = id });
+
+            return Content($@"
+                <html>
+                    <body style='font-family:Arial;text-align:center;padding-top:40px;'>
+                        <h2>❌ Cita cancelada</h2>
+                        <p>Gracias {cita.NombreCompleto}</p>
+                        <p>Su cita fue cancelada correctamente.</p>
+                    </body>
+                </html>
+            ", "text/html");
         }
     }
 }

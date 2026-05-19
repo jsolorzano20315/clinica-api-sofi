@@ -10,6 +10,7 @@
         public string Tipo { get; set; }
         public string Telefono { get; set; } 
         public string Estado { get; set; }
-        public string Clinica { get; set; } 
+        public string Clinica { get; set; }
+        public Boolean WhatsAppEnviado { get; set; }
     }
 }

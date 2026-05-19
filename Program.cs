@@ -36,6 +36,11 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
+builder.Services.AddHttpClient(); //AGREGAR AQUÍ
+
+builder.Services.AddScoped<WhatsAppService>();
+builder.Services.AddHostedService<WhatsAppSchedulerService>();
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Clinica API", Version = "v1" });

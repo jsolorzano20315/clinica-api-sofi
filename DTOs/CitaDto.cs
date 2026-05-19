@@ -10,8 +10,10 @@
         public string Tipo { get; set; }
         public string Estado { get; set; }
         public string Telefono { get; set; }
+        public string TelefonoDoctor { get; set; }
         public string NombreCompleto { get; set; }
         public string NombreDoctor { get; set; }
+        public Boolean WhatsAppEnviado { get; set; }
         public string Clinica { get; set; }
     }
 }
