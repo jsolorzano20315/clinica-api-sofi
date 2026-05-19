@@ -50,9 +50,13 @@ namespace ClinicaAPI.Services
                   AND a.WhatsAppEnviado = 0
             ", new { Hoy = hoy })).ToList();
 
+            _logger.LogInformation($"📌 Citas encontradas: {citas.Count}");
+
             foreach (var cita in citas)
             {
-
+                _logger.LogInformation(
+                    $"📨 Enviando mensaje a {cita.NombreCompleto} - {cita.Telefono}"
+                );
                 var apiBaseUrl = _config["ApiBaseUrl"];
 
                 var urlConfirmar =
@@ -107,7 +111,7 @@ namespace ClinicaAPI.Services
 
             var result = await response.Content.ReadAsStringAsync();
 
-            Console.WriteLine(result);
+            _logger.LogInformation($"📲 UltraMsg: {result}");
 
             response.EnsureSuccessStatusCode();
         }
