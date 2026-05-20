@@ -43,7 +43,14 @@ namespace ClinicaAPI.Services
 
             _logger.LogInformation("✅ SQL conectado");
 
-            var hoy = DateTime.Today;
+            var hondurasTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                    DateTime.UtcNow,
+                    "Central America Standard Time"
+                );
+
+            var hoy = hondurasTime.Date;
+
+            _logger.LogInformation($"📅 Fecha Honduras: {hoy}");
 
             var citas = (await connection.QueryAsync<CitaDto>(@"
                 SELECT  a.Id,
