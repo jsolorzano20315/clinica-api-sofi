@@ -17,11 +17,13 @@ namespace ClinicaAPI.Controllers
     {
         private readonly AuthService _authService;
 
+
         public CitasController(IConfiguration configuration, AuthService authService) 
         {
             Configuration = configuration;
             _authService = authService ?? throw new ArgumentNullException(nameof(authService));
         }
+
 
         public IConfiguration Configuration { get; }
 
@@ -217,7 +219,7 @@ namespace ClinicaAPI.Controllers
 
 
         [HttpGet("confirmar/{id}")]
-        public async Task<IActionResult> ConfirmarCita(int id)
+        public async Task<IActionResult> confirmar(int id) 
         {
             using var connection = new SqlConnection(
                 Configuration.GetConnectionString("EntitiesContext")
@@ -238,7 +240,7 @@ namespace ClinicaAPI.Controllers
                     if (cita == null)
                         return NotFound("Cita no encontrada");
 
-                    await connection.ExecuteAsync(@"
+            await connection.ExecuteAsync(@"
                 UPDATE Citas
                 SET Estado = 'Confirmada',
                     FechaConfirmacion = GETDATE()

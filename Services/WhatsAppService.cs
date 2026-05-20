@@ -26,6 +26,7 @@ namespace ClinicaAPI.Services
                 $"https://api.ultramsg.com/{instanceId}/messages/chat";
 
             var client = _httpClientFactory.CreateClient();
+            client.Timeout = TimeSpan.FromSeconds(30);
 
             var body = new Dictionary<string, string>
             {
@@ -36,7 +37,13 @@ namespace ClinicaAPI.Services
 
             var content = new FormUrlEncodedContent(body);
 
-            await client.PostAsync(url, content);
+            var response = await client.PostAsync(url, content);
+
+            var result = await response.Content.ReadAsStringAsync();
+
+            Console.WriteLine(result);
+
+            response.EnsureSuccessStatusCode();
         }
     }
 }

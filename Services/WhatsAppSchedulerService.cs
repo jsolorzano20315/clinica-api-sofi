@@ -14,9 +14,19 @@ namespace ClinicaAPI.Services
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly IConfiguration _config;
         private readonly ILogger<WhatsAppSchedulerService> _logger;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public WhatsAppSchedulerService(IServiceScopeFactory scopeFactory, IConfiguration config, ILogger<WhatsAppSchedulerService> logger) { _scopeFactory = scopeFactory; _config = config; _logger = logger; }
-
+        public WhatsAppSchedulerService(
+            IServiceScopeFactory scopeFactory,
+            IConfiguration config,
+            ILogger<WhatsAppSchedulerService> logger,
+            IHttpClientFactory httpClientFactory)
+        {
+            _scopeFactory = scopeFactory;
+            _config = config;
+            _logger = logger;
+            _httpClientFactory = httpClientFactory;
+        }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken) { _logger.LogInformation("🔥 WhatsAppSchedulerService iniciado"); while (!stoppingToken.IsCancellationRequested) { try { _logger.LogInformation("⏰ Procesando citas..."); await ProcesarCitas(); _logger.LogInformation("✅ Proceso finalizado"); } catch (Exception ex) { _logger.LogError(ex, "❌ Error en scheduler"); } await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken); } }
 
         private async Task ProcesarCitas()
@@ -26,6 +36,12 @@ namespace ClinicaAPI.Services
             using var connection = new SqlConnection(
                 _config.GetConnectionString("EntitiesContext")
             );
+
+            _logger.LogInformation("🔌 Abriendo conexión SQL...");
+
+            await connection.OpenAsync();
+
+            _logger.LogInformation("✅ SQL conectado");
 
             var hoy = DateTime.Today;
 
@@ -57,19 +73,18 @@ namespace ClinicaAPI.Services
                 _logger.LogInformation(
                     $"📨 Enviando mensaje a {cita.NombreCompleto} - {cita.Telefono}"
                 );
-                var apiBaseUrl = _config["ApiBaseUrl"];
+                var apiBaseUrl = _config["ApiBaseUrl"] ?? "https://clinica-api-sofi.onrender.com";
 
                 var urlConfirmar =
-                    $"Cita Confirmada: {apiBaseUrl}/api/citas/confirmar/{cita.Id}";
+                     $"✅{apiBaseUrl}/api/citas/confirmar/{cita.Id}";
 
                 var urlCancelar =
-                    $"Cita cancelada: {apiBaseUrl}/api/citas/cancelar/{cita.Id}";
+                    $"❌{apiBaseUrl}/api/citas/cancelar/{cita.Id}";
 
-
-                var urlWhatsAppConfirmar = 
+                var urlWhatsAppConfirmar =
                     $"https://wa.me/{cita.TelefonoDoctor.Replace("+", "")}?text={Uri.EscapeDataString(urlConfirmar)}";
 
-                var urlWhatsAppCancelar = 
+                var urlWhatsAppCancelar =
                       $"https://wa.me/{cita.TelefonoDoctor.Replace("+", "")}?text={Uri.EscapeDataString(urlCancelar)}";
 
                 var mensaje =
@@ -80,40 +95,53 @@ namespace ClinicaAPI.Services
                     $"❌ Cancelar:{urlWhatsAppCancelar}\n\n" +
                     $"Saludos cordiales,\n{cita.Clinica}.";
 
-                await EnviarWhatsApp(cita.Telefono, mensaje);
+                var success = await EnviarWhatsApp(cita.Telefono, mensaje);
 
-                await connection.ExecuteAsync(@"
-                    UPDATE Citas
-                    SET WhatsAppEnviado = 1
-                    WHERE Id = @Id
-                ", new { cita.Id });
+                if (success)
+                {
+                    await connection.ExecuteAsync(@"
+                        UPDATE Citas
+                        SET WhatsAppEnviado = 1
+                        WHERE Id = @Id
+                    ", new { cita.Id });
+                }
             }
         }
-
-        private async Task EnviarWhatsApp(string telefono, string mensaje)
+        private async Task<bool> EnviarWhatsApp(string telefono, string mensaje)
         {
-            var instanceId = _config["UltraMsg:InstanceId"];
-            var token = _config["UltraMsg:Token"];
+            try
+            {
+                var instanceId = _config["UltraMsg:InstanceId"];
+                var token = _config["UltraMsg:Token"];
 
-            using var client = new HttpClient();
+                var client = _httpClientFactory.CreateClient();
+                client.Timeout = TimeSpan.FromSeconds(30);
 
-            var body = new Dictionary<string, string>
-                {
-                    { "token", token },
-                    { "to", telefono.Replace("+", "") },
-                    { "body", mensaje }
-                };
+                var body = new Dictionary<string, string>
+                    {
+                        { "token", token },
+                        { "to", telefono.Replace("+", "") },
+                        { "body", mensaje }
+                    };
 
-            var response = await client.PostAsync(
-                $"https://api.ultramsg.com/{instanceId}/messages/chat",
-                new FormUrlEncodedContent(body)
-            );
+                var response = await client.PostAsync(
+                 $"https://api.ultramsg.com/{instanceId}/messages/chat",
+                     new FormUrlEncodedContent(body)
+                 );
 
-            var result = await response.Content.ReadAsStringAsync();
+                var result = await response.Content.ReadAsStringAsync();
 
-            _logger.LogInformation($"📲 UltraMsg: {result}");
+                _logger.LogInformation($"📲 StatusCode: {response.StatusCode}");
+                _logger.LogInformation($"📲 UltraMsg Response: {result}");
 
-            response.EnsureSuccessStatusCode();
+                return response.IsSuccessStatusCode;
+            
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error enviando WhatsApp");
+                return false;
+            }
         }
     }
 }
