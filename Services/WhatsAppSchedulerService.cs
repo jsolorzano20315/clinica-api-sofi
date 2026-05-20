@@ -121,6 +121,10 @@ namespace ClinicaAPI.Services
                 var instanceId = _config["UltraMsg:InstanceId"];
                 var token = _config["UltraMsg:Token"];
 
+                _logger.LogInformation($"📌 InstanceId: {instanceId}");
+                _logger.LogInformation($"📌 Token: {token}");
+
+
                 var client = _httpClientFactory.CreateClient();
                 client.Timeout = TimeSpan.FromSeconds(30);
 
