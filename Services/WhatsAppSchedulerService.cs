@@ -68,7 +68,7 @@ namespace ClinicaAPI.Services
                 FROM Citas a
                 INNER JOIN Paciente b ON a.PacienteId = b.Id
                 INNER JOIN Doctor c ON a.DoctorId = c.Id
-                WHERE CAST(a.Fecha AS DATE) = @Hoy
+                WHERE CONVERT(date, a.Fecha) = CONVERT(date, @Hoy)
                   AND a.Estado = 'Pendiente'
                   AND a.WhatsAppEnviado = 0
             ", new { Hoy = hoy })).ToList();
