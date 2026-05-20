@@ -233,6 +233,7 @@ namespace ClinicaAPI.Controllers
                     b.Telefono,
                     a.Clinica,
                     a.Respondida,
+                    a.NombreDoctor,
                     CONCAT(b.Nombre, ' ', b.Apellido) AS NombreCompleto
                 FROM Citas a
                 INNER JOIN Paciente b ON a.PacienteId = b.Id
@@ -245,7 +246,30 @@ namespace ClinicaAPI.Controllers
             // YA RESPONDIDA
             if (cita.Respondida)
             {
-               return Content("⚠️ Esta cita ya fue confirmada o cancelada anteriormente.");
+                return Content(@"
+                    <div style='
+                        font-family: Arial, sans-serif;
+                        text-align: center;
+                        margin-top: 60px;
+                        padding: 30px;
+                    '>
+                        <h1 style='color: #d97706; font-size: 42px;'>
+                            ⚠️ Acción ya realizada
+                        </h1>
+
+                        <p style='font-size: 24px; color: #444; margin-top: 20px;'>
+                            Esta cita ya fue <b>confirmada</b> o <b>cancelada</b>  anteriormente.
+                        </p>
+
+                        <p style='font-size: 20px; color: #666; margin-top: 15px;'>
+                            No se puede realizar nuevamente esta acción.
+                        </p>
+
+                        <div style='margin-top: 35px; font-size: 18px; color: #888;'>
+                             {cita.Clinica} 🏥
+                        </div>
+                    </div>
+                ", "text/html");
             }
 
             await connection.ExecuteAsync(@"
@@ -279,7 +303,7 @@ namespace ClinicaAPI.Controllers
                         box-shadow:0 2px 10px rgba(0,0,0,0.1);
                     '>
 
-                        <div style='font-size:60px;'>{cita.Clinica}</div>
+                        <div style='font-size:20px;'>{cita.Clinica} 🏥</div>
 
                         <h2 style='color:#d32f2f;'>
                             Cita Confirmada
@@ -321,6 +345,7 @@ namespace ClinicaAPI.Controllers
                     b.Telefono,
                     a.Clinica,
                     a.Respondida,
+                    a.NombreDoctor,
                     CONCAT(b.Nombre, ' ', b.Apellido) AS NombreCompleto
                 FROM Citas a
                 INNER JOIN Paciente b ON a.PacienteId = b.Id
@@ -333,7 +358,30 @@ namespace ClinicaAPI.Controllers
             // YA RESPONDIDA
             if (cita.Respondida)
             {
-                return Content("⚠️ Esta cita ya fue confirmada o cancelada anteriormente.");
+                return Content(@"
+                    <div style='
+                        font-family: Arial, sans-serif;
+                        text-align: center;
+                        margin-top: 60px;
+                        padding: 30px;
+                    '>
+                        <h1 style='color: #d97706; font-size: 42px;'>
+                            ⚠️ Acción ya realizada
+                        </h1>
+
+                        <p style='font-size: 24px; color: #444; margin-top: 20px;'>
+                            Esta cita ya fue <b>confirmada</b> o <b>cancelada</b> anteriormente.
+                        </p>
+
+                        <p style='font-size: 20px; color: #666; margin-top: 15px;'>
+                            No se puede realizar nuevamente esta acción.
+                        </p>
+
+                        <div style='margin-top: 35px; font-size: 18px; color: #888;'>
+                             {cita.Clinica} 🏥
+                        </div>
+                    </div>
+                ", "text/html");
             }
 
             await connection.ExecuteAsync(@"
@@ -366,7 +414,7 @@ namespace ClinicaAPI.Controllers
                         text-align:center;
                         box-shadow:0 2px 10px rgba(0,0,0,0.1);
                     '>
-                        <div style='font-size:60px;'>{cita.Clinica}</div>
+                        <div style='font-size:20px;'>{cita.Clinica} 🏥</div>
 
                         <h2 style='color:#d32f2f;'>
                             Cita Cancelada
