@@ -231,19 +231,28 @@ namespace ClinicaAPI.Controllers
                     a.Fecha,
                     a.Estado,
                     b.Telefono,
+                    a.Clinica,
+                    a.Respondida,
                     CONCAT(b.Nombre, ' ', b.Apellido) AS NombreCompleto
                 FROM Citas a
                 INNER JOIN Paciente b ON a.PacienteId = b.Id
                 WHERE a.Id = @Id
             ", new { Id = id });
 
-                    if (cita == null)
-                        return NotFound("Cita no encontrada");
+            if (cita == null)
+                return NotFound("Cita no encontrada");
+
+            // YA RESPONDIDA
+            if (cita.Respondida)
+            {
+               return Content("⚠️ Esta cita ya fue confirmada o cancelada anteriormente.");
+            }
 
             await connection.ExecuteAsync(@"
                 UPDATE Citas
                 SET Estado = 'Confirmada',
-                    FechaConfirmacion = GETDATE()
+                Respondida = 1,
+                FechaConfirmacion = GETDATE()
                 WHERE Id = @Id
             ", new { Id = id });
 
@@ -270,7 +279,7 @@ namespace ClinicaAPI.Controllers
                         box-shadow:0 2px 10px rgba(0,0,0,0.1);
                     '>
 
-                        <div style='font-size:60px;'>❌</div>
+                        <div style='font-size:60px;'>{cita.Clinica}</div>
 
                         <h2 style='color:#d32f2f;'>
                             Cita Confirmada
@@ -287,7 +296,7 @@ namespace ClinicaAPI.Controllers
                         <hr style='margin:25px 0;'>
 
                         <p style='font-size:14px;color:gray;'>
-                            {cita.Clinica}
+                           Dr. <strong> {cita.NombreDoctor}
                         </p>
 
                     </div>
@@ -298,7 +307,7 @@ namespace ClinicaAPI.Controllers
         }
 
         [HttpGet("cancelar/{id}")]
-        public async Task<IActionResult> CancelarCita(int id)
+        public async Task<IActionResult> cancelar(int id)
         {
             using var connection = new SqlConnection(
                 Configuration.GetConnectionString("EntitiesContext")
@@ -310,6 +319,8 @@ namespace ClinicaAPI.Controllers
                     a.Fecha,
                     a.Estado,
                     b.Telefono,
+                    a.Clinica,
+                    a.Respondida,
                     CONCAT(b.Nombre, ' ', b.Apellido) AS NombreCompleto
                 FROM Citas a
                 INNER JOIN Paciente b ON a.PacienteId = b.Id
@@ -319,10 +330,17 @@ namespace ClinicaAPI.Controllers
             if (cita == null)
                 return NotFound("Cita no encontrada");
 
+            // YA RESPONDIDA
+            if (cita.Respondida)
+            {
+                return Content("⚠️ Esta cita ya fue confirmada o cancelada anteriormente.");
+            }
+
             await connection.ExecuteAsync(@"
                 UPDATE Citas
                 SET Estado = 'Cancelada',
-                    FechaCancelacion = GETDATE()
+                Respondida = 1,
+                FechaCancelacion = GETDATE()
                 WHERE Id = @Id
             ", new { Id = id });
 
@@ -348,8 +366,7 @@ namespace ClinicaAPI.Controllers
                         text-align:center;
                         box-shadow:0 2px 10px rgba(0,0,0,0.1);
                     '>
-
-                        <div style='font-size:60px;'>❌</div>
+                        <div style='font-size:60px;'>{cita.Clinica}</div>
 
                         <h2 style='color:#d32f2f;'>
                             Cita Cancelada
@@ -366,7 +383,7 @@ namespace ClinicaAPI.Controllers
                         <hr style='margin:25px 0;'>
 
                         <p style='font-size:14px;color:gray;'>
-                            {cita.Clinica}
+                             Dr. <strong> {cita.NombreDoctor}
                         </p>
 
                     </div>
@@ -374,6 +391,6 @@ namespace ClinicaAPI.Controllers
                 </body>
                 </html>
                 ", "text/html");
-        }
+        } 
     }
 }

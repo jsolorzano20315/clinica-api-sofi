@@ -30,7 +30,7 @@ namespace ClinicaAPI.Services
         protected override async Task ExecuteAsync(CancellationToken stoppingToken) { _logger.LogInformation("🔥 WhatsAppSchedulerService iniciado"); while (!stoppingToken.IsCancellationRequested) { try { _logger.LogInformation("⏰ Procesando citas..."); await ProcesarCitas(); _logger.LogInformation("✅ Proceso finalizado"); } catch (Exception ex) { _logger.LogError(ex, "❌ Error en scheduler"); } await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken); } }
 
         private async Task ProcesarCitas()
-        {
+         {
             var clinica = _config["Clinica"]; // opcional si lo usas
 
             using var connection = new SqlConnection(
@@ -124,17 +124,16 @@ namespace ClinicaAPI.Services
                 var client = _httpClientFactory.CreateClient();
                 client.Timeout = TimeSpan.FromSeconds(30);
 
-                var body = new Dictionary<string, string>
-                    {
-                        { "token", token },
-                        { "to", telefono.Replace("+", "") },
-                        { "body", mensaje }
-                    };
+                var content = new FormUrlEncodedContent(new[]
+                {
+                    new KeyValuePair<string, string>("token", token),
+                    new KeyValuePair<string, string>("to", telefono.Replace("+", "")),
+                    new KeyValuePair<string, string>("body", mensaje)
+                });
 
                 var response = await client.PostAsync(
-                 $"https://api.ultramsg.com/{instanceId}/messages/chat",
-                     new FormUrlEncodedContent(body)
-                 );
+                    $"https://api.ultramsg.com/{instanceId}/messages/chat",
+                    content);
 
                 var result = await response.Content.ReadAsStringAsync();
 
@@ -142,7 +141,6 @@ namespace ClinicaAPI.Services
                 _logger.LogInformation($"📲 UltraMsg Response: {result}");
 
                 return response.IsSuccessStatusCode;
-            
             }
             catch (Exception ex)
             {
