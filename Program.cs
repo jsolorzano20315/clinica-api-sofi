@@ -36,7 +36,10 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-builder.Services.AddHttpClient<WhatsAppService>();
+builder.Services.AddHttpClient<WhatsAppService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 builder.Services.AddHostedService<WhatsAppSchedulerService>();
 

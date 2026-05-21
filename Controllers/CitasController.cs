@@ -17,12 +17,14 @@ namespace ClinicaAPI.Controllers
     {
         private readonly AuthService _authService;
         private readonly WhatsAppService _whatsAppService;
+        private readonly ILogger<WhatsAppSchedulerService> _logger;
 
-        public CitasController(IConfiguration configuration, AuthService authService, WhatsAppService whatsAppService) 
+        public CitasController(IConfiguration configuration, AuthService authService, WhatsAppService whatsAppService, ILogger<WhatsAppSchedulerService> logger) 
         {
             Configuration = configuration;
             _authService = authService ?? throw new ArgumentNullException(nameof(authService));
             _whatsAppService = whatsAppService;
+            _logger = logger;
         }
 
 
@@ -284,6 +286,7 @@ namespace ClinicaAPI.Controllers
                     WHERE Id = @Id
                  ", new { Id = id });
 
+                _logger.LogInformation($"📌 TelefonoDoctor: {cita.TelefonoDoctor}");
 
                 // ✅ MENSAJE AL DOCTOR
                 var mensajeDoctor =

@@ -29,9 +29,7 @@ namespace ClinicaAPI.Services
                     .Trim();
 
                 var url =
-                    $"https://api.ultramsg.com/{instanceId}/messages/chat";
-
-                _httpClient.Timeout = TimeSpan.FromSeconds(30);
+                    $"https://api.ultramsg.com/{instanceId}/messages/chat";      
 
                 var body = new Dictionary<string, string>
                 {
@@ -54,7 +52,7 @@ namespace ClinicaAPI.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.ToString());
                 return false;
             }
         }
