@@ -248,15 +248,38 @@ namespace ClinicaAPI.Controllers
 
                 if (cita.Respondida)
                 {
-                    return Content("YA RESPONDIDA");
+                    return Content(@"
+                    <div style='
+                        font-family: Arial, sans-serif;
+                        text-align: center;
+                        margin-top: 60px;
+                        padding: 30px;
+                    '>
+                        <h1 style='color: #d97706; font-size: 42px;'>
+                            ⚠️ Acción ya realizada
+                        </h1>
+
+                        <p style='font-size: 24px; color: #444; margin-top: 20px;'>
+                            Esta cita ya fue <b>confirmada</b> o <b>cancelada</b> anteriormente.
+                        </p>
+
+                        <p style='font-size: 20px; color: #666; margin-top: 15px;'>
+                            No se puede realizar nuevamente esta acción.
+                        </p>
+
+                        <div style='margin-top: 35px; font-size: 18px; color: #888;'>
+                             {cita.Clinica} 🏥
+                        </div>
+                    </div>
+                ", "text/html");
                 }
 
                 await connection.ExecuteAsync(@"
-            UPDATE Citas
-            SET Estado = 'Confirmada',
-                Respondida = 1,
-                FechaConfirmacion = GETDATE()
-            WHERE Id = @Id
+                    UPDATE Citas
+                    SET Estado = 'Confirmada',
+                        Respondida = 1,
+                        FechaConfirmacion = GETDATE()
+                    WHERE Id = @Id
                  ", new { Id = id });
 
                 return Content("CITA CONFIRMADA");
