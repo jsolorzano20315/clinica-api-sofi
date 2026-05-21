@@ -219,115 +219,59 @@ namespace ClinicaAPI.Controllers
 
 
         [HttpGet("confirmar/{id}")]
-        public async Task<IActionResult> confirmar(int id) 
+        public async Task<IActionResult> Confirmar(int id)
         {
-            using var connection = new SqlConnection(
-                Configuration.GetConnectionString("EntitiesContext")
-            );
-
-            var cita = await connection.QueryFirstOrDefaultAsync<CitaDto>(@"
-                SELECT
-                    a.Id,
-                    a.Fecha,
-                    a.Estado,
-                    b.Telefono,
-                    a.Clinica,
-                    a.Respondida,
-                    a.NombreDoctor,
-                    CONCAT(b.Nombre, ' ', b.Apellido) AS NombreCompleto
-                FROM Citas a
-                INNER JOIN Paciente b ON a.PacienteId = b.Id
-                WHERE a.Id = @Id
-            ", new { Id = id });
-
-            if (cita == null)
-                return NotFound("Cita no encontrada");
-
-            // YA RESPONDIDA
-            if (cita.Respondida)
+            try
             {
-                return Content(@"
-                    <div style='
-                        font-family: Arial, sans-serif;
-                        text-align: center;
-                        margin-top: 60px;
-                        padding: 30px;
-                    '>
-                        <h1 style='color: #d97706; font-size: 42px;'>
-                            ⚠️ Acción ya realizada
-                        </h1>
+                using var connection = new SqlConnection(
+                    Configuration.GetConnectionString("EntitiesContext")
+                );
 
-                        <p style='font-size: 24px; color: #444; margin-top: 20px;'>
-                            Esta cita ya fue <b>confirmada</b> o <b>cancelada</b>  anteriormente.
-                        </p>
+                await connection.OpenAsync();
 
-                        <p style='font-size: 20px; color: #666; margin-top: 15px;'>
-                            No se puede realizar nuevamente esta acción.
-                        </p>
+                var cita = await connection.QueryFirstOrDefaultAsync<CitaDto>(@"
+            SELECT
+                a.Id,
+                a.Fecha,
+                a.Estado,
+                b.Telefono,
+                a.Clinica,
+                a.Respondida,
+                a.NombreDoctor,
+                CONCAT(b.Nombre, ' ', b.Apellido) AS NombreCompleto
+            FROM Citas a
+            INNER JOIN Paciente b ON a.PacienteId = b.Id
+            WHERE a.Id = @Id
+        ", new { Id = id });
 
-                        <div style='margin-top: 35px; font-size: 18px; color: #888;'>
-                             {cita.Clinica} 🏥
-                        </div>
-                    </div>
-                ", "text/html");
-            }
+                if (cita == null)
+                    return NotFound("Cita no encontrada");
 
-            await connection.ExecuteAsync(@"
-                UPDATE Citas
-                SET Estado = 'Confirmada',
+                if (cita.Respondida)
+                {
+                    return Content("YA RESPONDIDA");
+                }
+
+                await connection.ExecuteAsync(@"
+            UPDATE Citas
+            SET Estado = 'Confirmada',
                 Respondida = 1,
                 FechaConfirmacion = GETDATE()
-                WHERE Id = @Id
-            ", new { Id = id });
+            WHERE Id = @Id
+                 ", new { Id = id });
 
-            return Content($@"
-                <html>
-                <head>
-                    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-                </head>
+                return Content("CITA CONFIRMADA");
+            }
+            catch (Exception ex)
+            {
+                return Content($@"
+            ERROR:
+            {ex.Message}
 
-                <body style='
-                    font-family: Arial;
-                    background-color:#f5f5f5;
-                    margin:0;
-                    padding:20px;
-                '>
-
-                    <div style='
-                        max-width:400px;
-                        margin:auto;
-                        background:white;
-                        padding:30px;
-                        border-radius:12px;
-                        text-align:center;
-                        box-shadow:0 2px 10px rgba(0,0,0,0.1);
-                    '>
-
-                        <div style='font-size:20px;'>{cita.Clinica} 🏥</div>
-
-                        <h2 style='color:#d32f2f;'>
-                            Cita Confirmada
-                        </h2>
-
-                        <p style='font-size:18px;'>
-                            Gracias <strong>{cita.NombreCompleto}</strong>
-                        </p>
-
-                        <p style='color:#555;'>
-                            Su cita fue confirmada correctamente.
-                        </p>
-
-                        <hr style='margin:25px 0;'>
-
-                        <p style='font-size:14px;color:gray;'>
-                           Dr. <strong>{cita.NombreDoctor}</strong>
-                        </p>
-
-                    </div>
-
-                </body>
-                </html>
-                ", "text/html");
+            INNER:
+            {ex.InnerException?.Message}
+        ");
+            }
         }
 
         [HttpGet("cancelar/{id}")]

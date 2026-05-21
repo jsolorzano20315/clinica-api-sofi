@@ -39,7 +39,20 @@ namespace ClinicaAPI.Services
 
             _logger.LogInformation("🔌 Abriendo conexión SQL...");
 
-            await connection.OpenAsync();
+            try
+            {
+                _logger.LogInformation("🔌 Intentando abrir SQL...");
+
+                await connection.OpenAsync();
+
+                _logger.LogInformation("✅ SQL conectado");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ ERROR CONECTANDO SQL");
+
+                throw;
+            }
 
             _logger.LogInformation("✅ SQL conectado");
 
