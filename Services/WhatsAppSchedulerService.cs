@@ -104,6 +104,7 @@ namespace ClinicaAPI.Services
                         $"Confirme o cancele:\n\n" +
                         $"✅ Confirmar: https://clinica-api-sofi.onrender.com/api/citas/confirmar/{cita.Id}\n\n" +
                         $"❌ Cancelar: https://clinica-api-sofi.onrender.com/api/citas/cancelar/{cita.Id}\n\n" +
+                        $"🔄 Reprogramar:\n" +$"https://clinica-api-sofi.onrender.com/api/citas/reprogramar/{cita.Id}\n\n" +
                         $"Saludos,\n{cita.Clinica}";
 
                          var success = await _whatsAppService.EnviarAsync(cita.Telefono,mensaje);
