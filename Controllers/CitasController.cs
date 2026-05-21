@@ -237,7 +237,6 @@ namespace ClinicaAPI.Controllers
                 b.Telefono,
                 a.Clinica,
                 a.Respondida,
-                a.NombreDoctor,
                 CONCAT(b.Nombre, ' ', b.Apellido) AS NombreCompleto
             FROM Citas a
             INNER JOIN Paciente b ON a.PacienteId = b.Id

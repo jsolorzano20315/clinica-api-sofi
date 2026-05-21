@@ -58,9 +58,10 @@ namespace ClinicaAPI.Services
                 DateTime.UtcNow,
                 "Central America Standard Time"
             ).Date;
+         
 
             var inicio = hoy;
-            var fin = hoy.AddDays(1);
+            var fin = inicio.AddDays(1);
 
             _logger.LogInformation($"📅 Rango: {inicio} - {fin}");
 
@@ -143,10 +144,16 @@ namespace ClinicaAPI.Services
                 var client = _httpClientFactory.CreateClient();
                 client.Timeout = TimeSpan.FromSeconds(30);
 
+                if (!telefono.StartsWith("504"))
+                {
+                    _logger.LogWarning($"⚠️ Teléfono inválido: {telefono}");
+                    return false;
+                }
+
                 var content = new FormUrlEncodedContent(new[]
                 {
                     new KeyValuePair<string, string>("token", token),
-                    new KeyValuePair<string, string>("to", telefono.Replace("+", "")),
+                    new KeyValuePair<string, string>("to", telefono.Replace("+", "").Trim()),
                     new KeyValuePair<string, string>("body", mensaje)
                 });
 
@@ -158,6 +165,8 @@ namespace ClinicaAPI.Services
 
                 _logger.LogInformation($"📲 UltraMsg Status: {response.StatusCode}");
                 _logger.LogInformation($"📲 UltraMsg Response: {result}");
+
+                var json = result.ToLower();         
 
                 return response.IsSuccessStatusCode;
             }
