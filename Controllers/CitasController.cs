@@ -257,6 +257,13 @@ namespace ClinicaAPI.Controllers
                         WHERE a.Id = @Id
                     ", new { Id = id });
 
+     
+                    _logger.LogInformation($"📊 SQL RESULT:");
+                    _logger.LogInformation($"Doctor: {cita.NombreDoctor}");
+                    _logger.LogInformation($"TelefonoDoctor: '{cita.TelefonoDoctor}'");
+                    _logger.LogInformation($"Paciente: {cita.NombreCompleto}");
+                    _logger.LogInformation($"Fecha: {cita.Fecha}");
+
                 if (cita == null)
                     return NotFound("Cita no encontrada");
 
@@ -292,7 +299,14 @@ namespace ClinicaAPI.Controllers
                     WHERE Id = @Id
                  ", new { Id = id });
 
+                _logger.LogInformation("🚀 ANTES de NotificarDoctorConfirmacion");
                 await _notificacionesService.NotificarDoctorConfirmacion(cita);
+                _logger.LogInformation("🏁 DESPUÉS de NotificarDoctorConfirmacion");
+
+                if (string.IsNullOrWhiteSpace(cita.TelefonoDoctor))
+                {
+                    _logger.LogWarning("⚠️ Doctor sin teléfono en BD - NO SE ENVIARÁ WHATSAPP");
+                }
 
                 return Content($@"
                 <html>

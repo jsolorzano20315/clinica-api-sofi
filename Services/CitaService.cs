@@ -17,6 +17,7 @@ namespace ClinicaAPI.Services
 
         public async Task NotificarDoctorConfirmacion(CitaDto cita)
         {
+            _logger.LogInformation($"📱 TelefonoDoctor RAW: '{cita.TelefonoDoctor}'");
             if (string.IsNullOrWhiteSpace(cita.TelefonoDoctor))
             {
                 _logger.LogWarning("⚠️ Doctor sin teléfono");
