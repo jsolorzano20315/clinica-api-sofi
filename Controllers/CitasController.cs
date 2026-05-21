@@ -256,20 +256,16 @@ namespace ClinicaAPI.Controllers
                         padding: 30px;
                     '>
                         <h1 style='color: #d97706; font-size: 42px;'>
-                            ⚠️ Acción ya realizada
+                            Accion ya realizada
                         </h1>
 
-                        <p style='font-size: 24px; color: #444; margin-top: 20px;'>
+                        <p style='font-size: 24px; color: #444; margin-top: 30px;'>
                             Esta cita ya fue <b>confirmada</b> o <b>cancelada</b> anteriormente.
                         </p>
 
-                        <p style='font-size: 20px; color: #666; margin-top: 15px;'>
-                            No se puede realizar nuevamente esta acción.
+                        <p style='font-size: 20px; color: #666; margin-top: 25px;'>
+                            No se puede realizar nuevamente esta accion.
                         </p>
-
-                        <div style='margin-top: 35px; font-size: 18px; color: #888;'>
-                             {cita.Clinica} 🏥
-                        </div>
                     </div>
                 ", "text/html");
                 }
