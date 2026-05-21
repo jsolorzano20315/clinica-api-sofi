@@ -219,7 +219,7 @@ namespace ClinicaAPI.Controllers
 
 
         [HttpGet("confirmar/{id}")]
-        public async Task<IActionResult> Confirmar(int id)
+        public async Task<IActionResult> confirmar(int id)
         {
             try
             {
@@ -255,15 +255,15 @@ namespace ClinicaAPI.Controllers
                         margin-top: 60px;
                         padding: 30px;
                     '>
-                        <h1 style='color: #d97706; font-size: 48px;'>
-                            Acción ya realizada
+                        <h1 style='color: #d97706; font-size: 55px;'>
+                            ⚠️ Acción ya realizada
                         </h1>
 
-                        <p style='font-size: 24px; color: #444; margin-top: 38px;'>
+                        <p style='font-size: 24px; color: #444; margin-top: 45px;'>
                             Esta cita ya fue <b>confirmada</b> o <b>cancelada</b> anteriormente.
                         </p>
 
-                        <p style='font-size: 20px; color: #666; margin-top: 28px;'>
+                        <p style='font-size: 20px; color: #666; margin-top: 35px;'>
                             No se puede realizar nuevamente esta acción.
                         </p>
                     </div>
@@ -300,10 +300,10 @@ namespace ClinicaAPI.Controllers
                         text-align:center;
                         box-shadow:0 2px 10px rgba(0,0,0,0.1);
                     '>
-                        <div style='font-size:20px;'>{cita.Clinica} 🏥</div>
+                        <div style='font-size:10px;'>{cita.Clinica} 🏥</div>
 
                         <h2 style='color:#d32f2f;'>
-                            Cita confirmada
+                            ✅ Cita confirmada
                         </h2>
 
                         <p style='font-size:18px;'>
@@ -315,11 +315,6 @@ namespace ClinicaAPI.Controllers
                         </p>
 
                         <hr style='margin:25px 0;'>
-
-                        <p style='font-size:14px;color:gray;'>
-                             Dr. <strong>{cita.NombreDoctor}</strong>
-                        </p>
-
                     </div>
 
                 </body>
@@ -339,68 +334,66 @@ namespace ClinicaAPI.Controllers
         }
 
         [HttpGet("cancelar/{id}")]
-        public async Task<IActionResult> cancelar(int id)
+        public async Task<IActionResult> cancelar(int id) 
         {
-            using var connection = new SqlConnection(
-                Configuration.GetConnectionString("EntitiesContext")
-            );
-
-            var cita = await connection.QueryFirstOrDefaultAsync<CitaDto>(@"
-                SELECT
-                    a.Id,
-                    a.Fecha,
-                    a.Estado,
-                    b.Telefono,
-                    a.Clinica,
-                    a.Respondida,
-                    a.NombreDoctor,
-                    CONCAT(b.Nombre, ' ', b.Apellido) AS NombreCompleto
-                FROM Citas a
-                INNER JOIN Paciente b ON a.PacienteId = b.Id
-                WHERE a.Id = @Id
-            ", new { Id = id });
-
-            if (cita == null)
-                return NotFound("Cita no encontrada");
-
-            // YA RESPONDIDA
-            if (cita.Respondida)
+            try
             {
-                return Content(@"
+                using var connection = new SqlConnection(
+                    Configuration.GetConnectionString("EntitiesContext")
+                );
+
+                await connection.OpenAsync();
+
+                var cita = await connection.QueryFirstOrDefaultAsync<CitaDto>(@"
+            SELECT
+                a.Id,
+                a.Fecha,
+                a.Estado,
+                b.Telefono,
+                a.Clinica,
+                a.Respondida,
+                CONCAT(b.Nombre, ' ', b.Apellido) AS NombreCompleto
+            FROM Citas a
+            INNER JOIN Paciente b ON a.PacienteId = b.Id
+            WHERE a.Id = @Id
+        ", new { Id = id });
+
+                if (cita == null)
+                    return NotFound("Cita no encontrada");
+
+                if (cita.Respondida)
+                {
+                    return Content(@"
                     <div style='
                         font-family: Arial, sans-serif;
                         text-align: center;
                         margin-top: 60px;
                         padding: 30px;
                     '>
-                        <h1 style='color: #d97706; font-size: 42px;'>
+                        <h1 style='color: #d97706; font-size: 55px;'>
                             ⚠️ Acción ya realizada
                         </h1>
 
-                        <p style='font-size: 24px; color: #444; margin-top: 20px;'>
+                        <p style='font-size: 24px; color: #444; margin-top: 45px;'>
                             Esta cita ya fue <b>confirmada</b> o <b>cancelada</b> anteriormente.
                         </p>
 
-                        <p style='font-size: 20px; color: #666; margin-top: 15px;'>
+                        <p style='font-size: 20px; color: #666; margin-top: 35px;'>
                             No se puede realizar nuevamente esta acción.
                         </p>
-
-                        <div style='margin-top: 35px; font-size: 18px; color: #888;'>
-                             {cita.Clinica} 🏥
-                        </div>
                     </div>
-                ", "text/html");
-            }
+                ", "text/html; charset=utf-8");
+                }
 
-            await connection.ExecuteAsync(@"
-                UPDATE Citas
-                SET Estado = 'Cancelada',
-                Respondida = 1,
-                FechaCancelacion = GETDATE()
-                WHERE Id = @Id
-            ", new { Id = id });
+                await connection.ExecuteAsync(@"
+                    UPDATE Citas
+                    SET Estado = 'Cancelada',
+                        Respondida = 1,
+                        FechaConfirmacion = GETDATE()
+                    WHERE Id = @Id
+                 ", new { Id = id });
 
-            return Content($@"
+                return Content($@"
                 <html>
                 <head>
                     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
@@ -422,10 +415,10 @@ namespace ClinicaAPI.Controllers
                         text-align:center;
                         box-shadow:0 2px 10px rgba(0,0,0,0.1);
                     '>
-                        <div style='font-size:20px;'>{cita.Clinica} 🏥</div>
+                        <div style='font-size:10px;'>{cita.Clinica} 🏥</div>
 
                         <h2 style='color:#d32f2f;'>
-                            Cita Cancelada
+                            ❌ Cita cancelada
                         </h2>
 
                         <p style='font-size:18px;'>
@@ -437,16 +430,22 @@ namespace ClinicaAPI.Controllers
                         </p>
 
                         <hr style='margin:25px 0;'>
-
-                        <p style='font-size:14px;color:gray;'>
-                             Dr. <strong>{cita.NombreDoctor}</strong>
-                        </p>
-
                     </div>
 
                 </body>
                 </html>
-                ", "text/html");
-        } 
+                ", "text/html; charset=utf-8");
+            }
+            catch (Exception ex)
+            {
+                return Content($@"
+            ERROR:
+            {ex.Message}
+
+            INNER:
+            {ex.InnerException?.Message}
+        ");
+            }
+        }
     }
 }
