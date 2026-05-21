@@ -299,15 +299,7 @@ namespace ClinicaAPI.Controllers
                     WHERE Id = @Id
                  ", new { Id = id });
 
-                _logger.LogInformation("🚀 ANTES de NotificarDoctorConfirmacion");
-                await _notificacionesService.NotificarDoctorConfirmacion(cita);
-                _logger.LogInformation("🏁 DESPUÉS de NotificarDoctorConfirmacion");
-
-                if (string.IsNullOrWhiteSpace(cita.TelefonoDoctor))
-                {
-                    _logger.LogWarning("⚠️ Doctor sin teléfono en BD - NO SE ENVIARÁ WHATSAPP");
-                }
-
+                       
                 return Content($@"
                 <html>
                 <head>
@@ -340,9 +332,30 @@ namespace ClinicaAPI.Controllers
                             Gracias <strong>{cita.NombreCompleto}</strong>
                         </p>
 
-                        <p style='color:#555;'>
-                            Su cita fue confirmada correctamente.
-                        </p>
+                       <p style='color:#555;'>
+                        Su cita fue confirmada correctamente.
+                    </p>
+
+                    <hr style='margin:25px 0;'>
+
+                    <p style='font-size:16px; color:#333;'>
+                        📢 Notificar al doctor:
+                    </p>
+
+                    <a href='https://api.whatsapp.com/send?phone={cita.TelefonoDoctor}&text=📢%20El%20paciente%20{cita.NombreCompleto}%20CONFIRMÓ%20la%20cita%20del%20día%20{cita.Fecha:dd/MM/yyyy%20HH:mm}'
+                       style='
+                           display:inline-block;
+                           background-color:#25D366;
+                           color:white;
+                           padding:12px 18px;
+                           border-radius:8px;
+                           text-decoration:none;
+                           font-weight:bold;
+                           margin-top:10px;
+                       '
+                       target='_blank'>
+                       💬 Enviar WhatsApp al doctor
+                    </a>
 
                         <hr style='margin:25px 0;'>
                     </div>
