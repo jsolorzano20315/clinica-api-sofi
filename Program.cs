@@ -40,6 +40,7 @@ builder.Services.AddHttpClient<WhatsAppService>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(30);
 });
+builder.Services.AddScoped<NotificacionesService>();
 
 builder.Services.AddHostedService<WhatsAppSchedulerService>();
 

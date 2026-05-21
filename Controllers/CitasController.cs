@@ -19,13 +19,17 @@ namespace ClinicaAPI.Controllers
         private readonly AuthService _authService;
         private readonly WhatsAppService _whatsAppService;
         private readonly ILogger<WhatsAppSchedulerService> _logger;
+        private readonly NotificacionesService _notificacionesService;
 
-        public CitasController(IConfiguration configuration, AuthService authService, WhatsAppService whatsAppService, ILogger<WhatsAppSchedulerService> logger) 
+        public CitasController(IConfiguration configuration, AuthService authService, 
+                               WhatsAppService whatsAppService, ILogger<WhatsAppSchedulerService> logger, 
+                               NotificacionesService notificacionesService) 
         {
             Configuration = configuration;
             _authService = authService ?? throw new ArgumentNullException(nameof(authService));
             _whatsAppService = whatsAppService;
             _logger = logger;
+            _notificacionesService = notificacionesService;
         }
 
 
@@ -288,43 +292,7 @@ namespace ClinicaAPI.Controllers
                     WHERE Id = @Id
                  ", new { Id = id });
 
-                _logger.LogInformation("📨 Preparando envío al doctor");
-
-                _logger.LogInformation($"📞 TelefonoDoctor: {cita.TelefonoDoctor}");
-                _logger.LogInformation($"👤 Paciente: {cita.NombreCompleto}");
-                _logger.LogInformation($"📅 Fecha: {cita.Fecha}");
-
-                if (string.IsNullOrWhiteSpace(cita.TelefonoDoctor))
-                {
-                    _logger.LogWarning("⚠️ No se envía WhatsApp: Doctor sin teléfono");
-                }
-                else
-                {
-                    var mensajeDoctor =
-                        $"📢 El paciente {cita.NombreCompleto} " +
-                        $"CONFIRMÓ la cita del día {cita.Fecha:dd/MM/yyyy HH:mm}.";
-
-                    _logger.LogInformation($"📨 Mensaje doctor: {mensajeDoctor}");
-                    _logger.LogInformation("🚀 INICIANDO ENVÍO WHATSAPP AL DOCTOR");
-
-                    bool enviado = false;
-
-                    try
-                    {
-                        enviado = await _whatsAppService.EnviarAsync(
-                            cita.TelefonoDoctor,
-                            mensajeDoctor
-                        );
-
-                        _logger.LogInformation("✅ ENVÍO TERMINADO");
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "❌ ERROR enviando WhatsApp al doctor");
-                    }
-
-                    _logger.LogInformation($"📲 Resultado final envío doctor: {enviado}");
-                }
+                await _notificacionesService.NotificarDoctorConfirmacion(cita);
 
                 return Content($@"
                 <html>
