@@ -5,6 +5,7 @@ using ClinicaAPI.Services;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Data.SqlClient;
 using System.Text;
@@ -224,6 +225,7 @@ namespace ClinicaAPI.Controllers
         [HttpGet("confirmar/{id}")]
         public async Task<IActionResult> confirmar(int id)
         {
+            _logger.LogInformation($"🔥 Entró endpoint confirmar con ID: {id}");
             try
             {
                 using var connection = new SqlConnection(
@@ -286,11 +288,15 @@ namespace ClinicaAPI.Controllers
                     WHERE Id = @Id
                  ", new { Id = id });
 
-                _logger.LogInformation("📨 Preparando mensaje doctor");
+                _logger.LogInformation("📨 Preparando envío al doctor");
+
+                _logger.LogInformation($"📞 TelefonoDoctor: {cita.TelefonoDoctor}");
+                _logger.LogInformation($"👤 Paciente: {cita.NombreCompleto}");
+                _logger.LogInformation($"📅 Fecha: {cita.Fecha}");
 
                 if (string.IsNullOrWhiteSpace(cita.TelefonoDoctor))
                 {
-                    _logger.LogWarning("⚠️ Doctor sin teléfono");
+                    _logger.LogWarning("⚠️ No se envía WhatsApp: Doctor sin teléfono");
                 }
                 else
                 {
@@ -298,14 +304,26 @@ namespace ClinicaAPI.Controllers
                         $"📢 El paciente {cita.NombreCompleto} " +
                         $"CONFIRMÓ la cita del día {cita.Fecha:dd/MM/yyyy HH:mm}.";
 
-                    _logger.LogInformation($"📞 Enviando a doctor: {cita.TelefonoDoctor}");
+                    _logger.LogInformation($"📨 Mensaje doctor: {mensajeDoctor}");
+                    _logger.LogInformation("🚀 INICIANDO ENVÍO WHATSAPP AL DOCTOR");
 
-                    var enviado = await _whatsAppService.EnviarAsync(
-                        cita.TelefonoDoctor,
-                        mensajeDoctor
-                    );
+                    bool enviado = false;
 
-                    _logger.LogInformation($"📲 Resultado envío doctor: {enviado}");
+                    try
+                    {
+                        enviado = await _whatsAppService.EnviarAsync(
+                            cita.TelefonoDoctor,
+                            mensajeDoctor
+                        );
+
+                        _logger.LogInformation("✅ ENVÍO TERMINADO");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "❌ ERROR enviando WhatsApp al doctor");
+                    }
+
+                    _logger.LogInformation($"📲 Resultado final envío doctor: {enviado}");
                 }
 
                 return Content($@"
