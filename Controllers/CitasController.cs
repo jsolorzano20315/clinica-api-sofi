@@ -255,19 +255,19 @@ namespace ClinicaAPI.Controllers
                         margin-top: 60px;
                         padding: 30px;
                     '>
-                        <h1 style='color: #d97706; font-size: 42px;'>
-                            Accion ya realizada
+                        <h1 style='color: #d97706; font-size: 48px;'>
+                            Acción ya realizada
                         </h1>
 
-                        <p style='font-size: 24px; color: #444; margin-top: 30px;'>
+                        <p style='font-size: 24px; color: #444; margin-top: 38px;'>
                             Esta cita ya fue <b>confirmada</b> o <b>cancelada</b> anteriormente.
                         </p>
 
-                        <p style='font-size: 20px; color: #666; margin-top: 25px;'>
-                            No se puede realizar nuevamente esta accion.
+                        <p style='font-size: 20px; color: #666; margin-top: 28px;'>
+                            No se puede realizar nuevamente esta acción.
                         </p>
                     </div>
-                ", "text/html");
+                ", "text/html; charset=utf-8");
                 }
 
                 await connection.ExecuteAsync(@"
@@ -278,7 +278,53 @@ namespace ClinicaAPI.Controllers
                     WHERE Id = @Id
                  ", new { Id = id });
 
-                return Content("CITA CONFIRMADA");
+                return Content($@"
+                <html>
+                <head>
+                    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                </head>
+
+                <body style='
+                    font-family: Arial;
+                    background-color:#f5f5f5;
+                    margin:0;
+                    padding:20px;
+                '>
+
+                    <div style='
+                        max-width:400px;
+                        margin:auto;
+                        background:white;
+                        padding:30px;
+                        border-radius:12px;
+                        text-align:center;
+                        box-shadow:0 2px 10px rgba(0,0,0,0.1);
+                    '>
+                        <div style='font-size:20px;'>{cita.Clinica} 🏥</div>
+
+                        <h2 style='color:#d32f2f;'>
+                            Cita confirmada
+                        </h2>
+
+                        <p style='font-size:18px;'>
+                            Gracias <strong>{cita.NombreCompleto}</strong>
+                        </p>
+
+                        <p style='color:#555;'>
+                            Su cita fue confirmada correctamente.
+                        </p>
+
+                        <hr style='margin:25px 0;'>
+
+                        <p style='font-size:14px;color:gray;'>
+                             Dr. <strong>{cita.NombreDoctor}</strong>
+                        </p>
+
+                    </div>
+
+                </body>
+                </html>
+                ", "text/html; charset=utf-8");
             }
             catch (Exception ex)
             {
