@@ -236,11 +236,16 @@ namespace ClinicaAPI.Controllers
                             a.Fecha,
                             a.Estado,
                             b.Telefono,
+                            c.Telefono AS TelefonoDoctor,
+                            c.Nombre AS NombreDoctor,
                             a.Clinica,
                             a.Respondida,
                             CONCAT(b.Nombre, ' ', b.Apellido) AS NombreCompleto
                         FROM Citas a
-                        INNER JOIN Paciente b ON a.PacienteId = b.Id
+                        INNER JOIN Paciente b
+                            ON a.PacienteId = b.Id
+                        INNER JOIN Doctor c
+                            ON a.DoctorId = c.Id
                         WHERE a.Id = @Id
                     ", new { Id = id });
 
@@ -354,18 +359,23 @@ namespace ClinicaAPI.Controllers
                 await connection.OpenAsync();
 
                 var cita = await connection.QueryFirstOrDefaultAsync<CitaDto>(@"
-            SELECT
-                a.Id,
-                a.Fecha,
-                a.Estado,
-                b.Telefono,
-                a.Clinica,
-                a.Respondida,
-                CONCAT(b.Nombre, ' ', b.Apellido) AS NombreCompleto
-            FROM Citas a
-            INNER JOIN Paciente b ON a.PacienteId = b.Id
-            WHERE a.Id = @Id
-        ", new { Id = id });
+                SELECT
+                    a.Id,
+                    a.Fecha,
+                    a.Estado,
+                    b.Telefono,
+                    c.Telefono AS TelefonoDoctor,
+                    c.Nombre AS NombreDoctor,
+                    a.Clinica,
+                    a.Respondida,
+                    CONCAT(b.Nombre, ' ', b.Apellido) AS NombreCompleto
+                FROM Citas a
+                INNER JOIN Paciente b
+                    ON a.PacienteId = b.Id
+                INNER JOIN Doctor c
+                    ON a.DoctorId = c.Id
+                WHERE a.Id = @Id
+            ", new { Id = id });
 
                 if (cita == null)
                     return NotFound("Cita no encontrada");
