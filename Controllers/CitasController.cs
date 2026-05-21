@@ -320,7 +320,7 @@ namespace ClinicaAPI.Controllers
                         <hr style='margin:25px 0;'>
 
                         <p style='font-size:14px;color:gray;'>
-                           Dr. <strong> {cita.NombreDoctor}
+                           Dr. <strong>{cita.NombreDoctor}</strong>
                         </p>
 
                     </div>
@@ -431,7 +431,7 @@ namespace ClinicaAPI.Controllers
                         <hr style='margin:25px 0;'>
 
                         <p style='font-size:14px;color:gray;'>
-                             Dr. <strong> {cita.NombreDoctor}
+                             Dr. <strong>{cita.NombreDoctor}</strong>
                         </p>
 
                     </div>

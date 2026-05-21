@@ -83,24 +83,18 @@ namespace ClinicaAPI.Services
                 var apiBaseUrl = _config["ApiBaseUrl"] ?? "https://clinica-api-sofi.onrender.com";
 
                 var urlConfirmar =
-                     $"✅{apiBaseUrl}/api/citas/confirmar/{cita.Id}";
+                    $"{apiBaseUrl}/api/citas/confirmar/{cita.Id}";
 
                 var urlCancelar =
-                    $"❌{apiBaseUrl}/api/citas/cancelar/{cita.Id}";
-
-                var urlWhatsAppConfirmar =
-                    $"https://wa.me/{cita.TelefonoDoctor.Replace("+", "")}?text={Uri.EscapeDataString(urlConfirmar)}";
-
-                var urlWhatsAppCancelar =
-                      $"https://wa.me/{cita.TelefonoDoctor.Replace("+", "")}?text={Uri.EscapeDataString(urlCancelar)}";
+                    $"{apiBaseUrl}/api/citas/cancelar/{cita.Id}";
 
                 var mensaje =
-                    $"Hola {cita.NombreCompleto} 👋\n\n" +
-                    $"Le recordamos su cita programada para el día {cita.Fecha:dd/MM/yyyy}.\n\n" +
-                    $"Por favor confirme o cancele su asistencia presionando uno de los siguientes enlaces:\n\n" +
-                    $"✅ Confirmar:{urlWhatsAppConfirmar}\n\n" +
-                    $"❌ Cancelar:{urlWhatsAppCancelar}\n\n" +
-                    $"Saludos cordiales,\n{cita.Clinica}.";
+                     $"Hola {cita.NombreCompleto} 👋\n\n" +
+                     $"Le recordamos su cita programada para el día {cita.Fecha:dd/MM/yyyy}.\n\n" +
+                     $"Por favor confirme o cancele su asistencia:\n\n" +
+                     $"✅ Confirmar:\n{urlConfirmar}\n\n" +
+                     $"❌ Cancelar:\n{urlCancelar}\n\n" +
+                     $"Saludos cordiales,\n{cita.Clinica}.";
 
                 var success = await EnviarWhatsApp(cita.Telefono, mensaje);
 
