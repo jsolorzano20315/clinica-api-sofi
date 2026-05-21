@@ -490,7 +490,7 @@ namespace ClinicaAPI.Controllers
                             📢 Notificar al doctor:
                         </p>
 
-                        <a href='https://api.whatsapp.com/send?phone={cita.TelefonoDoctor}&text=📢%20El%20paciente%20{cita.NombreCompleto}%CANCELO%20la%20cita%20del%20día%20{cita.Fecha:dd/MM/yyyy}'
+                        <a href='https://api.whatsapp.com/send?phone={cita.TelefonoDoctor}&text=📢%20El%20paciente%20{cita.NombreCompleto}%20CANCELO%20la%20cita%20del%20día%20{cita.Fecha:dd/MM/yyyy}'
                            style='
                                display:inline-block;
                                background-color:#25D366;
