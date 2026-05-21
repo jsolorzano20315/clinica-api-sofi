@@ -286,14 +286,17 @@ namespace ClinicaAPI.Controllers
                     WHERE Id = @Id
                  ", new { Id = id });
 
-                _logger.LogInformation($"📌 TelefonoDoctor: {cita.TelefonoDoctor}");
-
                 // ✅ MENSAJE AL DOCTOR
                 var mensajeDoctor =
                     $"📢 El paciente {cita.NombreCompleto} " +
                     $"CONFIRMÓ la cita del día {cita.Fecha:dd/MM/yyyy HH:mm}.";
 
-                   await _whatsAppService.EnviarAsync(cita.TelefonoDoctor, mensajeDoctor);
+                var enviado = await _whatsAppService.EnviarAsync(
+                     cita.TelefonoDoctor,
+                     mensajeDoctor
+                    );
+
+                _logger.LogInformation($"📲 Resultado envío doctor: {enviado}");
 
                 return Content($@"
                 <html>

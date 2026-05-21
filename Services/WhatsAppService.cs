@@ -16,9 +16,9 @@ namespace ClinicaAPI.Services
         }
 
         public async Task<bool> EnviarAsync(
-            string telefono,
-            string mensaje)
-        {
+          string telefono,
+          string mensaje)
+          {
             try
             {
                 var instanceId = _config["UltraMsg:InstanceId"];
@@ -26,10 +26,14 @@ namespace ClinicaAPI.Services
 
                 telefono = telefono
                     .Replace("+", "")
+                    .Replace("-", "")
+                    .Replace(" ", "")
                     .Trim();
 
+                Console.WriteLine($"📲 Enviando a: {telefono}");
+
                 var url =
-                    $"https://api.ultramsg.com/{instanceId}/messages/chat";      
+                    $"https://api.ultramsg.com/{instanceId}/messages/chat";
 
                 var body = new Dictionary<string, string>
                 {
@@ -46,13 +50,15 @@ namespace ClinicaAPI.Services
                 var result =
                     await response.Content.ReadAsStringAsync();
 
-                Console.WriteLine(result);
+                Console.WriteLine($"📲 STATUS: {response.StatusCode}");
+                Console.WriteLine($"📲 RESPUESTA: {result}");
 
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Console.WriteLine($"❌ ERROR WHATSAPP: {ex}");
+
                 return false;
             }
         }
