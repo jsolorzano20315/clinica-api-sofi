@@ -635,8 +635,8 @@ namespace ClinicaAPI.Controllers
                 </p>
 
                 <p style='color:#555;'>
-                    Nuestro personal se comunicará con usted
-                    para asignar una nueva fecha.
+                    Se le comunicará los cupos disponibles
+                    para asignar una nueva cita.
                 </p>
 
                 <hr style='margin:25px 0;'>
