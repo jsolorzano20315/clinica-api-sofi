@@ -36,10 +36,8 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-builder.Services.AddHttpClient(); //AGREGAR AQUÍ
 builder.Services.AddHttpClient<WhatsAppService>();
 
-builder.Services.AddScoped<WhatsAppService>();
 builder.Services.AddHostedService<WhatsAppSchedulerService>();
 
 builder.Services.AddSwaggerGen(c =>
