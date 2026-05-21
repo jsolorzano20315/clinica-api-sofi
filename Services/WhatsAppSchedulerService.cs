@@ -137,13 +137,20 @@ namespace ClinicaAPI.Services
 
                 var content = new FormUrlEncodedContent(new[]
                 {
-                    new KeyValuePair<string, string>("token", token),
+                    new KeyValuePair<string, string>("token", token ?? ""),
                     new KeyValuePair<string, string>("to", telefono.Replace("+", "")),
-                    new KeyValuePair<string, string>("body", mensaje)
+                    new KeyValuePair<string, string>("body", mensaje ?? "")
                 });
 
+                if (string.IsNullOrWhiteSpace(instanceId) ||
+                 string.IsNullOrWhiteSpace(token))
+                {
+                    _logger.LogError("❌ UltraMsg no configurado");
+                    return false;
+                }
+
                 var response = await client.PostAsync(
-                    $"https://api.ultramsg.com/{instanceId}/messages/chat",
+                    $"https://api.ultramsg.com{instanceId}/messages/chat",
                     content);
 
                 var result = await response.Content.ReadAsStringAsync();
