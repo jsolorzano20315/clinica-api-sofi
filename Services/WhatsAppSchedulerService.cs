@@ -10,17 +10,20 @@ namespace ClinicaAPI.Services
         private readonly IConfiguration _config;
         private readonly ILogger<WhatsAppSchedulerService> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly WhatsAppService _whatsAppService;
 
         public WhatsAppSchedulerService(
             IServiceScopeFactory scopeFactory,
             IConfiguration config,
             ILogger<WhatsAppSchedulerService> logger,
-            IHttpClientFactory httpClientFactory)
+            IHttpClientFactory httpClientFactory,
+            WhatsAppService whatsAppService)
         {
             _scopeFactory = scopeFactory;
             _config = config;
             _logger = logger;
             _httpClientFactory = httpClientFactory;
+            _whatsAppService = whatsAppService;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -103,7 +106,7 @@ namespace ClinicaAPI.Services
                         $"❌ Cancelar: https://clinica-api-sofi.onrender.com/api/citas/cancelar/{cita.Id}\n\n" +
                         $"Saludos,\n{cita.Clinica}";
 
-                    var success = await EnviarWhatsApp(cita.Telefono, mensaje);
+                         var success = await _whatsAppService.EnviarAsync(cita.Telefono,mensaje);
 
                     if (success)
                     {
@@ -125,56 +128,6 @@ namespace ClinicaAPI.Services
                     _logger.LogError(ex, $"❌ Error procesando cita {cita.Id}");
                 }
             }
-        }
-
-        private async Task<bool> EnviarWhatsApp(string telefono, string mensaje)
-        {
-            var instanceId = _config["UltraMsg:InstanceId"];
-            var token = _config["UltraMsg:Token"];
-
-            if (string.IsNullOrWhiteSpace(instanceId) ||
-                string.IsNullOrWhiteSpace(token))
-            {
-                _logger.LogError("❌ UltraMsg no configurado (InstanceId/Token vacío)");
-                return false;
-            }
-
-            try
-            {
-                var client = _httpClientFactory.CreateClient();
-                client.Timeout = TimeSpan.FromSeconds(30);
-
-                if (!telefono.StartsWith("504"))
-                {
-                    _logger.LogWarning($"⚠️ Teléfono inválido: {telefono}");
-                    return false;
-                }
-
-                var content = new FormUrlEncodedContent(new[]
-                {
-                    new KeyValuePair<string, string>("token", token),
-                    new KeyValuePair<string, string>("to", telefono.Replace("+", "").Trim()),
-                    new KeyValuePair<string, string>("body", mensaje)
-                });
-
-                var response = await client.PostAsync(
-                    $"https://api.ultramsg.com/{instanceId}/messages/chat",
-                    content);
-
-                var result = await response.Content.ReadAsStringAsync();
-
-                _logger.LogInformation($"📲 UltraMsg Status: {response.StatusCode}");
-                _logger.LogInformation($"📲 UltraMsg Response: {result}");
-
-                var json = result.ToLower();         
-
-                return response.IsSuccessStatusCode;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error enviando WhatsApp");
-                return false;
-            }
-        }
+        }     
     }
 }

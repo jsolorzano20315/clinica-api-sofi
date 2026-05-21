@@ -16,12 +16,13 @@ namespace ClinicaAPI.Controllers
     public class CitasController : ControllerBase
     {
         private readonly AuthService _authService;
+        private readonly WhatsAppService _whatsAppService;
 
-
-        public CitasController(IConfiguration configuration, AuthService authService) 
+        public CitasController(IConfiguration configuration, AuthService authService, WhatsAppService whatsAppService) 
         {
             Configuration = configuration;
             _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+            _whatsAppService = whatsAppService;
         }
 
 
@@ -230,18 +231,18 @@ namespace ClinicaAPI.Controllers
                 await connection.OpenAsync();
 
                 var cita = await connection.QueryFirstOrDefaultAsync<CitaDto>(@"
-            SELECT
-                a.Id,
-                a.Fecha,
-                a.Estado,
-                b.Telefono,
-                a.Clinica,
-                a.Respondida,
-                CONCAT(b.Nombre, ' ', b.Apellido) AS NombreCompleto
-            FROM Citas a
-            INNER JOIN Paciente b ON a.PacienteId = b.Id
-            WHERE a.Id = @Id
-        ", new { Id = id });
+                        SELECT
+                            a.Id,
+                            a.Fecha,
+                            a.Estado,
+                            b.Telefono,
+                            a.Clinica,
+                            a.Respondida,
+                            CONCAT(b.Nombre, ' ', b.Apellido) AS NombreCompleto
+                        FROM Citas a
+                        INNER JOIN Paciente b ON a.PacienteId = b.Id
+                        WHERE a.Id = @Id
+                    ", new { Id = id });
 
                 if (cita == null)
                     return NotFound("Cita no encontrada");
@@ -277,6 +278,14 @@ namespace ClinicaAPI.Controllers
                         FechaConfirmacion = GETDATE()
                     WHERE Id = @Id
                  ", new { Id = id });
+
+
+                // ✅ MENSAJE AL DOCTOR
+                var mensajeDoctor =
+                    $"📢 El paciente {cita.NombreCompleto} " +
+                    $"CONFIRMÓ la cita del día {cita.Fecha:dd/MM/yyyy HH:mm}.";
+
+                   await _whatsAppService.EnviarAsync(cita.TelefonoDoctor, mensajeDoctor);
 
                 return Content($@"
                 <html>
@@ -392,6 +401,13 @@ namespace ClinicaAPI.Controllers
                         FechaConfirmacion = GETDATE()
                     WHERE Id = @Id
                  ", new { Id = id });
+
+                // ✅ MENSAJE AL DOCTOR
+                var mensajeDoctor =
+                    $"📢 El paciente {cita.NombreCompleto} " +
+                    $"CANCELO la cita del día {cita.Fecha:dd/MM/yyyy HH:mm}.";
+
+                await _whatsAppService.EnviarAsync(cita.TelefonoDoctor, mensajeDoctor);
 
                 return Content($@"
                 <html>
