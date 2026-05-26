@@ -37,6 +37,8 @@
                 ,@Telefono
                 ,@Estado
                 ,@Clinica)
+
+                SELECT CAST(SCOPE_IDENTITY() as int) as Id;
 		                  ";
 
         //Listar Citas

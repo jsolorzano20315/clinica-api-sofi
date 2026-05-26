@@ -42,7 +42,7 @@ namespace ClinicaAPI.Controllers
 
             var userName = User.Identity?.Name ?? "Anonimo";
 
-            List<Cita> result;
+           // List<Cita> result;
             var query = new StringBuilder();
 
             query.AppendLine(StaticResources.QueryCrearCitas);
@@ -59,9 +59,15 @@ namespace ClinicaAPI.Controllers
             parameters.Add("@Clinica", model.Clinica); 
 
             using var connection = new System.Data.SqlClient.SqlConnection(Configuration.GetConnectionString("EntitiesContext"));
-            result = (await connection.QueryAsync<Cita>(query.ToString(), parameters)).ToList();
+            var id = await connection.ExecuteScalarAsync<int>(
+                query.ToString(),
+                parameters
+            );
 
-            return Ok(result ?? new List<Cita>());
+            return Ok(new
+            {
+                id = id
+            });
         }
 
         [HttpPut()]

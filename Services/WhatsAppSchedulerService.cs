@@ -43,7 +43,7 @@ namespace ClinicaAPI.Services
                     _logger.LogError(ex, "❌ Error en scheduler");
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+                await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
             }
         }
 
@@ -106,7 +106,7 @@ namespace ClinicaAPI.Services
                         $"❌ Cancelar: https://clinica-api-sofi.onrender.com/api/citas/cancelar/{cita.Id}\n\n" +
                         $"🔄 Reprogramar:\n" +$"https://clinica-api-sofi.onrender.com/api/citas/reprogramar/{cita.Id}\n\n" +
                         $"Saludos,\n{cita.Clinica}";
-
+                    
                          var success = await _whatsAppService.EnviarAsync(cita.Telefono,mensaje);
 
                     if (success)
