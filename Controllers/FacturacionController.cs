@@ -4,6 +4,7 @@ using ClinicaAPI.Services;
 using Dapper;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
+using System.Data.SqlClient;
 
 namespace ClinicaAPI.Controllers
 {
@@ -20,29 +21,46 @@ namespace ClinicaAPI.Controllers
 
         public IConfiguration Configuration { get; }
 
-        [HttpPost()]
+        [HttpPost]
         [Route("GuardarFactura")]
-        public async Task<IActionResult> GuardarFactura(Facturas model)
-        { 
+        public async Task<IActionResult> GuardarFactura([FromBody] Facturas model)
+        {
+            try
+            {
+                var query = new StringBuilder();
 
-            var userName = User.Identity?.Name ?? "Anonimo";
+                query.AppendLine(StaticResources.QueryCrearFacturacion);
 
-            List<Doctor> result;
-            var query = new StringBuilder();
+                DynamicParameters parameters = new DynamicParameters();
 
-            query.AppendLine(StaticResources.QueryCrearFacturacion);
+                parameters.Add("@PacienteId", model.PacienteId);
+                parameters.Add("@Fecha", model.Fecha);
+                parameters.Add("@Total", model.Total);
+                parameters.Add("@Clinica", model.Clinica);
 
-            DynamicParameters parameters = new DynamicParameters();
+                using var connection = new SqlConnection(
+                    Configuration.GetConnectionString("EntitiesContext")
+                );
 
-            parameters.Add("@PacienteId", model.PacienteId);
-            parameters.Add("@Fecha", model.Fecha);
-            parameters.Add("@Total", model.Total);
-            parameters.Add("@Clinica", model.Clinica); 
+                await connection.ExecuteAsync(
+                    query.ToString(),
+                    parameters
+                );
 
-            using var connection = new System.Data.SqlClient.SqlConnection(Configuration.GetConnectionString("EntitiesContext"));
-            result = (await connection.QueryAsync<Doctor>(query.ToString(), parameters)).ToList();
-
-            return Ok(result ?? new List<Doctor>());
+                return Ok(new
+                {
+                    success = true,
+                    message = "Factura guardada correctamente"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
         }
 
         [HttpGet()]

@@ -6,6 +6,7 @@
         public int PacienteId { get; set; }
         public int DoctorId { get; set; }
         public DateTime Fecha { get; set; }
+        public string Hora { get; set; }
         public DateTime FechaConfirmacion { get; set; }
         public DateTime FechaCancelacion { get; set; }
         public DateTime FechaRespuesta { get; set; }

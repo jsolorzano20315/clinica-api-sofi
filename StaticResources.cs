@@ -23,6 +23,7 @@
                ([PacienteId]
                ,[DoctorId]
                ,[Fecha]
+               ,[Hora]
                ,[Motivo]
                ,[Tipo]
                ,[Telefono]
@@ -32,6 +33,7 @@
                 (@PacienteId
                 ,@DoctorId
                 ,@Fecha
+                ,@Hora
                 ,@Motivo
                 ,@Tipo
                 ,@Telefono
@@ -46,6 +48,7 @@
 			SELECT a.[Id]
                   ,a.[PacienteId]
                   ,a.[Fecha]
+                  ,a.[Hora]
                   ,a.[Motivo]
                   ,a.[Tipo]
                   ,a.[Estado]
@@ -67,6 +70,8 @@
                    SET [Estado] = @Estado
                       ,[Motivo] = @Motivo
                       ,[Tipo] = @Tipo
+                      ,[Fecha] = @Fecha
+                      ,[Hora] = @Hora
                  WHERE Id = @Id
 		                  ";
 
@@ -282,6 +287,7 @@
                SELECT 
                     a.[Id],
                     a.[Fecha],
+                    a.[Hora],
                     d.Nombre AS Especialidad,
                     c.Nombre AS NombreDoctor,
                     a.[Tipo],

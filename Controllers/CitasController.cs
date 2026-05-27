@@ -35,9 +35,8 @@ namespace ClinicaAPI.Controllers
 
         public IConfiguration Configuration { get; }
 
-        [HttpPost()]
-        [Route("GuardarCitas")]
-        public async Task<IActionResult> GuardarCitas(Cita model) 
+        [HttpPost("GuardarCitas")]
+        public async Task<IActionResult> GuardarCitas([FromBody] Cita model)
         {
 
             var userName = User.Identity?.Name ?? "Anonimo";
@@ -52,6 +51,7 @@ namespace ClinicaAPI.Controllers
             parameters.Add("@PacienteId", model.PacienteId);
             parameters.Add("@DoctorId", model.DoctorId);
             parameters.Add("@Fecha", model.Fecha);
+            parameters.Add("@Hora", model.Hora ?? "");
             parameters.Add("@Motivo", model.Motivo);
             parameters.Add("@Tipo", model.Tipo);
             parameters.Add("@Telefono", model.Telefono);
@@ -70,9 +70,8 @@ namespace ClinicaAPI.Controllers
             });
         }
 
-        [HttpPut()]
-        [Route("EditarCitas/{id}")]
-        public async Task<IActionResult> EditarCitas(Cita model) 
+        [HttpPut("EditarCitas")]
+        public async Task<IActionResult> EditarCitas([FromBody] Cita model)
         {
 
             var userName = User.Identity?.Name ?? "Anonimo";
@@ -84,6 +83,8 @@ namespace ClinicaAPI.Controllers
             DynamicParameters parameters = new DynamicParameters();
 
             parameters.Add("@Id", model.Id);
+            parameters.Add("@Fecha", model.Fecha);
+            parameters.Add("@Hora", model.Hora ?? "");
             parameters.Add("@Estado", model.Estado);
             parameters.Add("@Tipo", model.Tipo);
             parameters.Add("@Motivo", model.Motivo);
@@ -248,6 +249,7 @@ namespace ClinicaAPI.Controllers
                         SELECT
                             a.Id,
                             a.Fecha,
+                            a.Hora,
                             a.Estado,
                             b.Telefono,
                             c.Telefono AS TelefonoDoctor,
