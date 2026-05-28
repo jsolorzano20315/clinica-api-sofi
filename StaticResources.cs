@@ -186,6 +186,34 @@
 
         #endregion
 
+        #region USUARIOS 
+
+        //Crear Usuarios
+        public static string QueryCrearUsuarios = @"                      					
+			INSERT INTO Usuario
+                (
+                    Nombre,
+                    Email,
+                    Password,
+                    Rol,
+                    Clinica,
+                    CodigoVerificacion,
+                    CorreoVerificado
+                )
+                VALUES
+                (
+                    @Nombre,
+                    @Email,
+                    @Password,
+                    @Rol,
+                    @Clinica,
+                    @CodigoVerificacion,
+                    @CorreoVerificado
+                )
+		                  ";
+
+        #endregion
+
         #region CALENDARIO  
         //Crear Calendario 
         public static string QueryCrearCalndario = @"                    					

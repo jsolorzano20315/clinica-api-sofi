@@ -14,5 +14,6 @@
         public string Token { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string Clinica { get; set; } = string.Empty;
+        public bool CorreoVerificado { get; set; }
     }
 }
