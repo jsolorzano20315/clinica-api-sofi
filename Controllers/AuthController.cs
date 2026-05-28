@@ -139,7 +139,7 @@ namespace ClinicaAPI.Controllers
         }
 
         [HttpPost("GuardarUsuarios")]
-        public async Task<IActionResult> GuardarUsuarios(Usuario model)
+        public async Task<IActionResult> GuardarUsuarios([FromBody] Usuario model)
         {
             try
             {
