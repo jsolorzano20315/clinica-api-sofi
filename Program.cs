@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using Resend;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,6 +43,24 @@ builder.Services.AddCors(options =>
 // ============================================
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+
+// 🔥 RESEND CONFIG
+builder.Services.AddOptions();
+
+builder.Services.Configure<ResendClientOptions>(options =>
+{
+    options.ApiToken = builder.Configuration["Resend:ApiKey"];
+});
+
+// 🔥 ESTO es lo que inyecta HttpClient correctamente
+builder.Services.AddHttpClient<ResendClient>();
+
+// 🔥 Tu abstracción
+builder.Services.AddScoped<IResend, ResendClient>();
+
+// 🔥 Tu servicio
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 builder.Services.AddHttpClient<WhatsAppService>(client =>
 {
