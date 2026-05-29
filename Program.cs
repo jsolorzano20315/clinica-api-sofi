@@ -3,30 +3,41 @@ using ClinicaAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Text;
 using Resend;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 🔥 IMPORTANTE
+// ============================================
+// CONFIGURACIÓN
+// ============================================
+
+// Leer appsettings.json + variables de entorno
+builder.Configuration.AddJsonFile(
+    "appsettings.json",
+    optional: false,
+    reloadOnChange: true
+);
+
 builder.Configuration.AddEnvironmentVariables();
 
+// ============================================
 // JWT
+// ============================================
+
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var keyString = jwtSettings["Key"] ?? throw new Exception("JWT Key no configurada");
-var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
 
-// 🔥 IMPORTANTE PARA RENDER
-//var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
+var keyString = jwtSettings["Key"]
+    ?? throw new Exception("JWT Key no configurada");
 
-builder.WebHost.ConfigureKestrel(serverOptions =>
-{
-    //   serverOptions.ListenAnyIP(int.Parse(port));
-});
+var key = new SymmetricSecurityKey(
+    Encoding.UTF8.GetBytes(keyString)
+);
 
 // ============================================
-// Configurar CORS
+// CORS
 // ============================================
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("_myAllowOrigins", policy =>
@@ -42,31 +53,31 @@ builder.Services.AddCors(options =>
 });
 
 // ============================================
-// Servicios
+// SERVICIOS BASE
 // ============================================
+
 builder.Services.AddControllers();
+
 builder.Services.AddEndpointsApiExplorer();
-
-
-// 🔥 RESEND CONFIG
-builder.Services.AddOptions();
 
 // ============================================
 // RESEND
 // ============================================
 
-var resendApiKey = builder.Configuration.GetValue<string>("Resend__ApiKey");
+builder.Services.AddOptions();
 
-Console.WriteLine($"RESEND ENV => {resendApiKey}");
+var resendApiKey = builder.Configuration["Resend:ApiKey"];
+
+Console.WriteLine($"RESEND => {resendApiKey}");
 
 if (string.IsNullOrWhiteSpace(resendApiKey))
 {
     throw new Exception("Resend ApiKey no configurada");
 }
 
-builder.Services.Configure<ResendClientOptions>(o =>
+builder.Services.Configure<ResendClientOptions>(options =>
 {
-    o.ApiToken = resendApiKey;
+    options.ApiToken = resendApiKey;
 });
 
 builder.Services.AddHttpClient();
@@ -75,7 +86,8 @@ builder.Services.AddTransient<IResend, ResendClient>();
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 
-
+// ============================================
+// WHATSAPP
 // ============================================
 
 builder.Services.AddHttpClient<WhatsAppService>(client =>
@@ -86,6 +98,10 @@ builder.Services.AddHttpClient<WhatsAppService>(client =>
 builder.Services.AddScoped<NotificacionesService>();
 
 builder.Services.AddHostedService<WhatsAppSchedulerService>();
+
+// ============================================
+// SWAGGER
+// ============================================
 
 builder.Services.AddSwaggerGen(c =>
 {
@@ -109,52 +125,65 @@ builder.Services.AddSwaggerGen(c =>
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
-        { securityScheme, new string[] { } }
+        { securityScheme, Array.Empty<string>() }
     });
 });
 
 // ============================================
-// JWT
+// AUTH JWT
 // ============================================
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
+
+builder.Services
+    .AddAuthentication(options =>
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings["Issuer"],
-        ValidAudience = jwtSettings["Audience"],
-        IssuerSigningKey = key
-    };
-});
+        options.DefaultAuthenticateScheme =
+            JwtBearerDefaults.AuthenticationScheme;
+
+        options.DefaultChallengeScheme =
+            JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters =
+            new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+
+                ValidIssuer = jwtSettings["Issuer"],
+                ValidAudience = jwtSettings["Audience"],
+
+                IssuerSigningKey = key
+            };
+    });
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddSingleton<AuthService>();
 
-builder.Services.AddAuthorization();
+// ============================================
+// APP
+// ============================================
 
 var app = builder.Build();
 
 app.MapGet("/", () => "Clinica API funcionando");
 
 // ============================================
-// Middlewares
+// MIDDLEWARES
 // ============================================
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
 
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Clinica API V1");
-    });
-}
+app.UseSwagger();
+
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint(
+        "/swagger/v1/swagger.json",
+        "Clinica API V1"
+    );
+});
 
 app.UseCors("_myAllowOrigins");
 
