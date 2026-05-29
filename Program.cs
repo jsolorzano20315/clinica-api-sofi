@@ -12,11 +12,17 @@ var jwtSettings = builder.Configuration.GetSection("Jwt");
 var keyString = jwtSettings["Key"] ?? throw new Exception("JWT Key no configurada");
 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
 
-// ============================================
-// Configurar CORS (CORREGIDO)
-// ============================================
-var MyAllowOrigins = "_myAllowOrigins";
+// 🔥 IMPORTANTE PARA RENDER
+ var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
 
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.ListenAnyIP(int.Parse(port));
+});
+
+// ============================================
+// Configurar CORS
+// ============================================
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("_myAllowOrigins", policy =>
@@ -41,6 +47,7 @@ builder.Services.AddHttpClient<WhatsAppService>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(30);
 });
+
 builder.Services.AddScoped<NotificacionesService>();
 
 builder.Services.AddHostedService<WhatsAppSchedulerService>();
@@ -49,7 +56,11 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Clinica API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Clinica API",
+        Version = "v1"
+    });
 
     var securityScheme = new OpenApiSecurityScheme
     {
@@ -70,7 +81,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // ============================================
-// Autenticación JWT
+// JWT
 // ============================================
 builder.Services.AddAuthentication(options =>
 {
@@ -92,6 +103,7 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddSingleton<AuthService>();
+
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
@@ -104,24 +116,19 @@ app.MapGet("/", () => "Clinica API funcionando");
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
+
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Clinica API V1");
     });
 }
 
-// 👇 IMPORTANTE: CORS antes de auth
-//app.UseRouting();
-
 app.UseCors("_myAllowOrigins");
 
 app.UseAuthentication();
+
 app.UseAuthorization();
 
 app.MapControllers();
-
-// 🔥 IMPORTANTE PARA CLOUD (Render, Azure, etc.)
-var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
-app.Urls.Add($"http://0.0.0.0:{port}");
 
 app.Run();
