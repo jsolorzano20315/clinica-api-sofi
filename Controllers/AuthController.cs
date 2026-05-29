@@ -346,5 +346,17 @@ namespace ClinicaAPI.Controllers
                 });
             }
         }
+
+        [HttpGet("test-email")]
+        public async Task<IActionResult> TestEmail()
+        {
+            await _emailService.EnviarCorreoAsync(
+                "jsolorzano.fc2018@gmail.com",
+                "Prueba",
+                "<h1>Hola</h1>"
+            );
+
+            return Ok();
+        }
     }
 }

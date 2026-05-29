@@ -48,9 +48,12 @@ builder.Services.AddEndpointsApiExplorer();
 // 🔥 RESEND CONFIG
 builder.Services.AddOptions();
 
-Console.WriteLine("RESEND KEY:");
-Console.WriteLine(key);
-Console.WriteLine("NULL? " + (key == null));
+var resendKey = builder.Configuration["Resend:ApiKey"];
+
+Console.WriteLine("==== RESEND KEY ====");
+Console.WriteLine(resendKey);
+Console.WriteLine("Length: " + resendKey?.Length);
+
 
 builder.Services.Configure<ResendClientOptions>(options =>
 {
