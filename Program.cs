@@ -8,17 +8,20 @@ using Resend;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// 🔥 IMPORTANTE
+builder.Configuration.AddEnvironmentVariables();
+
 // JWT
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var keyString = jwtSettings["Key"] ?? throw new Exception("JWT Key no configurada");
 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
 
 // 🔥 IMPORTANTE PARA RENDER
-var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
+//var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-    serverOptions.ListenAnyIP(int.Parse(port));
+    //   serverOptions.ListenAnyIP(int.Parse(port));
 });
 
 // ============================================
