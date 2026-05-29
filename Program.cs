@@ -48,23 +48,21 @@ builder.Services.AddEndpointsApiExplorer();
 // 🔥 RESEND CONFIG
 builder.Services.AddOptions();
 
-var resendKey = builder.Configuration["Resend:ApiKey"];
+var resendApiKey = builder.Configuration["Resend:ApiKey"];
 
-Console.WriteLine("==== RESEND KEY ====");
-Console.WriteLine(resendKey);
-Console.WriteLine("Length: " + resendKey?.Length);
-
+if (string.IsNullOrWhiteSpace(resendApiKey))
+{
+    throw new Exception("Resend ApiKey no configurada");
+}
 
 builder.Services.Configure<ResendClientOptions>(options =>
 {
-    options.ApiToken = builder.Configuration["Resend:ApiKey"]?.Trim();
+    options.ApiToken = resendApiKey.Trim();
 });
 
 // 🔥 ESTO es lo que inyecta HttpClient correctamente
-builder.Services.AddHttpClient<ResendClient>();
-
 // 🔥 Tu abstracción
-builder.Services.AddScoped<IResend, ResendClient>();
+builder.Services.AddHttpClient<IResend, ResendClient>();
 
 // 🔥 Tu servicio
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -77,8 +75,6 @@ builder.Services.AddHttpClient<WhatsAppService>(client =>
 builder.Services.AddScoped<NotificacionesService>();
 
 builder.Services.AddHostedService<WhatsAppSchedulerService>();
-
-builder.Services.AddScoped<IEmailService, EmailService>();
 
 builder.Services.AddSwaggerGen(c =>
 {
