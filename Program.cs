@@ -48,21 +48,32 @@ builder.Services.AddEndpointsApiExplorer();
 // 🔥 RESEND CONFIG
 builder.Services.AddOptions();
 
-var resendKey = builder.Configuration["Resend:ApiKey"];
+// ============================================
+// RESEND
+// ============================================
 
-Console.WriteLine($"RESEND KEY: {resendKey}");
+var resendApiKey =
+    Environment.GetEnvironmentVariable("Resend__ApiKey");
 
-builder.Services.Configure<ResendClientOptions>(options =>
+Console.WriteLine($"RESEND ENV => {resendApiKey}");
+
+if (string.IsNullOrWhiteSpace(resendApiKey))
 {
-    options.ApiToken = builder.Configuration["Resend:ApiKey"]?.Trim();
+    throw new Exception("Resend ApiKey no configurada");
+}
+
+builder.Services.Configure<ResendClientOptions>(o =>
+{
+    o.ApiToken = resendApiKey;
 });
 
-// 🔥 ESTO es lo que inyecta HttpClient correctamente
-// 🔥 Tu abstracción
-builder.Services.AddHttpClient<IResend, ResendClient>();
+builder.Services.AddHttpClient();
 
-// 🔥 Tu servicio
+builder.Services.AddTransient<IResend, ResendClient>();
+
 builder.Services.AddScoped<IEmailService, EmailService>();
+
+
 
 builder.Services.AddHttpClient<WhatsAppService>(client =>
 {
