@@ -55,8 +55,7 @@ builder.Services.AddOptions();
 // RESEND
 // ============================================
 
-var resendApiKey =
-    Environment.GetEnvironmentVariable("Resend__ApiKey");
+var resendApiKey = builder.Configuration.GetValue<string>("Resend__ApiKey");
 
 Console.WriteLine($"RESEND ENV => {resendApiKey}");
 
@@ -70,11 +69,14 @@ builder.Services.Configure<ResendClientOptions>(o =>
     o.ApiToken = resendApiKey;
 });
 
-builder.Services.AddHttpClient<IResend, ResendClient>();
+builder.Services.AddHttpClient();
+
+builder.Services.AddTransient<IResend, ResendClient>();
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 
+// ============================================
 
 builder.Services.AddHttpClient<WhatsAppService>(client =>
 {
