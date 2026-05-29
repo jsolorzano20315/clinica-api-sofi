@@ -67,9 +67,7 @@ builder.Services.Configure<ResendClientOptions>(o =>
     o.ApiToken = resendApiKey;
 });
 
-builder.Services.AddHttpClient();
-
-builder.Services.AddTransient<IResend, ResendClient>();
+builder.Services.AddHttpClient<IResend, ResendClient>();
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 
