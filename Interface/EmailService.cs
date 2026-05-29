@@ -1,29 +1,52 @@
-﻿using System.Net.Mail;
-using System.Net;
+﻿using System.Net;
+using System.Net.Mail;
 
 namespace ClinicaAPI.Interface
 {
     public class EmailService : IEmailService
     {
-        public async Task EnviarCorreoAsync(string destino, string asunto, string mensaje)
+        public async Task EnviarCorreoAsync(
+            string destino,
+            string asunto,
+            string mensaje)
         {
-            var fromEmail = "jsolorzano.fc2018@gmail.com";
-            var password = "fgcqzlsclxzssokd";
+            // TLS moderno
+            ServicePointManager.SecurityProtocol =
+                SecurityProtocolType.Tls12;
 
-            var smtp = new SmtpClient("smtp.gmail.com")
-            {
-                Port = 587,
-                Credentials = new NetworkCredential(fromEmail, password),
-                EnableSsl = true
-            };
+            var fromEmail =
+                "jsolorzano.fc2018@gmail.com";
 
-            var mail = new MailMessage
-            {
-                From = new MailAddress(fromEmail, "sofsystem"),
-                Subject = asunto,
-                Body = mensaje,
-                IsBodyHtml = true
-            };
+            var password =
+                "fgcqzlsclxzssokd";
+
+            using var smtp =
+                new SmtpClient("smtp.gmail.com")
+                {
+                    Port = 587,
+                    EnableSsl = true,
+                    DeliveryMethod =
+                        SmtpDeliveryMethod.Network,
+                    UseDefaultCredentials = false,
+                    Credentials =
+                        new NetworkCredential(
+                            fromEmail,
+                            password
+                        ),
+                    Timeout = 30000
+                };
+
+            using var mail =
+                new MailMessage
+                {
+                    From = new MailAddress(
+                        fromEmail,
+                        "sofsystem"
+                    ),
+                    Subject = asunto,
+                    Body = mensaje,
+                    IsBodyHtml = true
+                };
 
             mail.To.Add(destino);
 
