@@ -66,7 +66,7 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddOptions();
 
-var resendApiKey = builder.Configuration["Resend:ApiKey"];
+var resendApiKey = builder.Configuration["Resend__ApiKey"];
 
 Console.WriteLine($"RESEND => {resendApiKey}");
 
