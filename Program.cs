@@ -14,7 +14,7 @@ var keyString = jwtSettings["Key"] ?? throw new Exception("JWT Key no configurad
 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
 
 // 🔥 IMPORTANTE PARA RENDER
- var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
+var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
@@ -48,16 +48,13 @@ builder.Services.AddEndpointsApiExplorer();
 // 🔥 RESEND CONFIG
 builder.Services.AddOptions();
 
-var resendApiKey = builder.Configuration["Resend:ApiKey"];
+var resendKey = builder.Configuration["Resend:ApiKey"];
 
-if (string.IsNullOrWhiteSpace(resendApiKey))
-{
-    throw new Exception("Resend ApiKey no configurada");
-}
+Console.WriteLine($"RESEND KEY: {resendKey}");
 
 builder.Services.Configure<ResendClientOptions>(options =>
 {
-    options.ApiToken = resendApiKey.Trim();
+    options.ApiToken = builder.Configuration["Resend:ApiKey"]?.Trim();
 });
 
 // 🔥 ESTO es lo que inyecta HttpClient correctamente
