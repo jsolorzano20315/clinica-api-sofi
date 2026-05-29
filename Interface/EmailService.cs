@@ -10,47 +10,55 @@ namespace ClinicaAPI.Interface
             string asunto,
             string mensaje)
         {
-            // TLS moderno
-            ServicePointManager.SecurityProtocol =
-                SecurityProtocolType.Tls12;
+            try
+            {
+                ServicePointManager.SecurityProtocol =
+                    SecurityProtocolType.Tls12;
 
-            var fromEmail =
-                "jsolorzano.fc2018@gmail.com";
+                var fromEmail =
+                    "jsolorzano.fc2018@gmail.com";
 
-            var password =
-                "fgcqzlsclxzssokd";
+                var password =
+                    "fgcqzlsclxzssokd";
 
-            using var smtp =
-                new SmtpClient("smtp.gmail.com")
-                {
-                    Port = 587,
-                    EnableSsl = true,
-                    DeliveryMethod =
-                        SmtpDeliveryMethod.Network,
-                    UseDefaultCredentials = false,
-                    Credentials =
-                        new NetworkCredential(
+                using var smtp =
+                    new SmtpClient("smtp.gmail.com")
+                    {
+                        Port = 587,
+                        EnableSsl = true,
+                        DeliveryMethod =
+                            SmtpDeliveryMethod.Network,
+                        UseDefaultCredentials = false,
+                        Credentials =
+                            new NetworkCredential(
+                                fromEmail,
+                                password
+                            ),
+                        Timeout = 30000
+                    };
+
+                using var mail =
+                    new MailMessage
+                    {
+                        From = new MailAddress(
                             fromEmail,
-                            password
+                            "sofsystem"
                         ),
-                    Timeout = 30000
-                };
+                        Subject = asunto,
+                        Body = mensaje,
+                        IsBodyHtml = true
+                    };
 
-            using var mail =
-                new MailMessage
-                {
-                    From = new MailAddress(
-                        fromEmail,
-                        "sofsystem"
-                    ),
-                    Subject = asunto,
-                    Body = mensaje,
-                    IsBodyHtml = true
-                };
+                mail.To.Add(destino);
 
-            mail.To.Add(destino);
-
-            await smtp.SendMailAsync(mail);
+                await smtp.SendMailAsync(mail);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(
+                    $"ERROR SMTP: {ex.Message} | INNER: {ex.InnerException?.Message}"
+                );
+            }
         }
     }
 }
