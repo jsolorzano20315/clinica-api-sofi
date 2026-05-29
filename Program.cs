@@ -48,9 +48,13 @@ builder.Services.AddEndpointsApiExplorer();
 // 🔥 RESEND CONFIG
 builder.Services.AddOptions();
 
+Console.WriteLine("RESEND KEY:");
+Console.WriteLine(key);
+Console.WriteLine("NULL? " + (key == null));
+
 builder.Services.Configure<ResendClientOptions>(options =>
 {
-    options.ApiToken = builder.Configuration["Resend:ApiKey"];
+    options.ApiToken = builder.Configuration["Resend:ApiKey"]?.Trim();
 });
 
 // 🔥 ESTO es lo que inyecta HttpClient correctamente
