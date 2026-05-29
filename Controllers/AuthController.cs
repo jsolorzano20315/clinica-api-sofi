@@ -277,7 +277,9 @@ namespace ClinicaAPI.Controllers
                 return BadRequest(new
                 {
                     success = false,
-                    message = "Ocurrió un error al crear la cuenta."
+                    message = ex.Message,
+                    inner = ex.InnerException?.Message,
+                    detalle = ex.ToString()
                 });
             }
         }
