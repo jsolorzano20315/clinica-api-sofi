@@ -45,7 +45,8 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(
             "http://localhost:5173",
             "http://localhost:5174",
-            "https://clinica-app-sofi.vercel.app"
+            "https://clinica-app-sofi.vercel.app",
+            "https://www.clinica-app-sofi.vercel.app"
         )
         .AllowAnyHeader()
         .AllowAnyMethod();
@@ -166,6 +167,15 @@ builder.Services.AddSingleton<AuthService>();
 
 var app = builder.Build();
 
+// 👇 AQUÍ VA
+var port = Environment.GetEnvironmentVariable("PORT");
+
+if (!string.IsNullOrEmpty(port))
+{
+    app.Urls.Clear();
+    app.Urls.Add($"http://0.0.0.0:{port}");
+}
+
 app.MapGet("/", () => "Clinica API funcionando");
 
 // ============================================
@@ -176,16 +186,12 @@ app.UseSwagger();
 
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint(
-        "/swagger/v1/swagger.json",
-        "Clinica API V1"
-    );
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Clinica API V1");
 });
 
 app.UseCors("_myAllowOrigins");
 
-app.UseAuthentication();
-
+//app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
