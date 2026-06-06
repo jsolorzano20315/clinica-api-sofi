@@ -13,7 +13,9 @@ var keyString = jwtSettings["Key"] ?? throw new Exception("JWT Key no configurad
 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
 
 // 🔥 IMPORTANTE PARA RENDER
+
 var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
+
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {

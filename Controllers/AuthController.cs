@@ -194,6 +194,7 @@ namespace ClinicaAPI.Controllers
 
                 if (rowsAffected > 0)
                 {
+                    Console.WriteLine("ANTES DE ENVIAR CORREO");
                     // ENVIAR CORREO SOLO SI INSERTÓ BIEN
                     await _emailService.EnviarCorreoAsync(
                         model.Email,
@@ -248,6 +249,8 @@ namespace ClinicaAPI.Controllers
 
                         </div>"             
                     );
+
+                    Console.WriteLine("DESPUES DE ENVIAR CORREO");
 
                     return Ok(new
                     {
