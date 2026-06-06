@@ -68,16 +68,13 @@ builder.Services.AddOptions();
 
 var resendApiKey = builder.Configuration["Resend__ApiKey"];
 
-Console.WriteLine($"RESEND => {resendApiKey}");
-
 if (string.IsNullOrWhiteSpace(resendApiKey))
-{
-    throw new Exception("Resend ApiKey no configurada");
-}
+    //throw new Exception("Resend ApiKey no configurada");
+
 
 builder.Services.Configure<ResendClientOptions>(options =>
 {
-    options.ApiToken = resendApiKey;
+    //options.ApiToken = resendApiKey;
 });
 
 builder.Services.AddHttpClient();
