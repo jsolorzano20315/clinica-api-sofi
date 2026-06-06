@@ -27,7 +27,7 @@ namespace ClinicaAPI.Controllers
 
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginResponse request)
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             // VALIDACIONES
             if (
