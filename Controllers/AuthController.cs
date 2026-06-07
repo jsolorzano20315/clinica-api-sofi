@@ -354,12 +354,12 @@ namespace ClinicaAPI.Controllers
         public async Task<IActionResult> TestEmail()
         {
             await _emailService.EnviarCorreoAsync(
-                "jsolorzano_fc@hotmail.com",
-                "Prueba",
-                "<h1>Hola</h1>"
+                "jsolorzano.fc2018@gmail.com",
+                "Prueba Render",
+                "Correo enviado desde Render"
             );
 
-            return Ok();
+            return Ok("Correo enviado");
         }
     }
 }

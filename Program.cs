@@ -114,15 +114,12 @@ app.MapGet("/", () => "Clinica API funcionando");
 // ============================================
 // Middlewares
 // ============================================
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
+app.UseSwagger();
 
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Clinica API V1");
-    });
-}
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Clinica API V1");
+});
 
 app.UseCors("_myAllowOrigins");
 
