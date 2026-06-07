@@ -14,12 +14,11 @@ var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
 
 // 🔥 IMPORTANTE PARA RENDER
 
-var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
-
+//var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-    serverOptions.ListenAnyIP(int.Parse(port));
+  //  serverOptions.ListenAnyIP(int.Parse(port));
 });
 
 // ============================================
