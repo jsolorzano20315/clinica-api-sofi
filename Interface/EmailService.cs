@@ -15,7 +15,7 @@ namespace ClinicaAPI.Interface
             Console.WriteLine("=================================");
             // TLS moderno
             ServicePointManager.SecurityProtocol =
-                SecurityProtocolType.Tls12;
+                SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
 
             var SenderEmail =
                 "jsolorzano.fc2018@gmail.com";
@@ -59,11 +59,15 @@ namespace ClinicaAPI.Interface
             }
             catch (Exception ex)
             {
-                Console.WriteLine("ERROR SMTP:");
+                Console.WriteLine("===== SMTP ERROR =====");
                 Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
 
                 if (ex.InnerException != null)
+                {
+                    Console.WriteLine("===== INNER =====");
                     Console.WriteLine(ex.InnerException.Message);
+                }
 
                 throw;
             }

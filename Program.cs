@@ -5,6 +5,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 
+AppContext.SetSwitch("System.Net.DisableIPv6", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 // JWT
@@ -14,11 +16,11 @@ var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
 
 // 🔥 IMPORTANTE PARA RENDER
 
-//var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
+var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-  //  serverOptions.ListenAnyIP(int.Parse(port));
+    serverOptions.ListenAnyIP(int.Parse(port));
 });
 
 // ============================================
