@@ -98,13 +98,13 @@ namespace ClinicaAPI.Controllers
                 }
 
                 // VALIDAR CORREO
-                if (!userDb.CorreoVerificado)
-                {
-                    return Unauthorized(new
-                    {
-                        message = "Debe verificar su correo electrónico antes de iniciar sesión."
-                    });
-                }
+                //if (!userDb.CorreoVerificado)
+                //{
+                //return Unauthorized(new
+                //{
+                //message = "Debe verificar su correo electrónico antes de iniciar sesión."
+                //});
+                //}
 
                 // CREAR USUARIO JWT
                 var user = _authService.ValidateUser(
@@ -194,9 +194,9 @@ namespace ClinicaAPI.Controllers
 
                 if (rowsAffected > 0)
                 {
-                    Console.WriteLine("ANTES DE ENVIAR CORREO");
                     // ENVIAR CORREO SOLO SI INSERTÓ BIEN
-                    await _emailService.EnviarCorreoAsync(
+                    /*
+                     await _emailService.EnviarCorreoAsync(
                         model.Email,
                         "Verificación de cuenta - sofsystem",
                         $@"
@@ -247,15 +247,15 @@ namespace ClinicaAPI.Controllers
                                 sofsystem • Plataforma Inteligente para Gestión Clínica
                             </small>
 
-                        </div>"             
-                    );
-
-                    Console.WriteLine("DESPUES DE ENVIAR CORREO");
+                        </div>"
+                     );
+                     */
 
                     return Ok(new
                     {
                         success = true,
-                        message = "Usuario creado correctamente. Revise su correo para verificar la cuenta."
+                        message = "Su cuenta fue creado correctamente."
+                        //message = "Usuario creado correctamente. Revise su correo para verificar la cuenta."
                     });
                 }
 
