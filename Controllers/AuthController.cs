@@ -83,19 +83,19 @@ namespace ClinicaAPI.Controllers
                 }
 
                 // VALIDAR PASSWORD HASH
-                bool passwordCorrecta =
-                    BCrypt.Net.BCrypt.Verify(
-                        request.Password,
-                        userDb.Password
-                    );
+                //bool passwordCorrecta =
+                //    BCrypt.Net.BCrypt.Verify(
+                //        request.Password,
+                //        userDb.Password
+                //    );
 
-                if (!passwordCorrecta)
-                {
-                    return Unauthorized(new
-                    {
-                        message = "Correo o contraseña incorrectos"
-                    });
-                }
+                //if (!passwordCorrecta)
+                //{
+                //    return Unauthorized(new
+                //    {
+                //        message = "Correo o contraseña incorrectos"
+                //    });
+                //}
 
                 // VALIDAR CORREO
                 //if (!userDb.CorreoVerificado)
