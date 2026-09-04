@@ -16,7 +16,7 @@ var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
 
 // 🔥 IMPORTANTE PARA RENDER
 
-//var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
+var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
@@ -33,7 +33,8 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(
             "http://localhost:5173",
             "http://localhost:5174",
-            "https://clinica-app-sofi-omega.vercel.app/"
+            "https://clinica-app-sofi.vercel.app",
+            "https://clinica-app-sofi-omega.vercel.app"
         )
         .AllowAnyHeader()
         .AllowAnyMethod();
