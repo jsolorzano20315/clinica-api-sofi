@@ -237,6 +237,7 @@ namespace ClinicaAPI.Controllers
         public async Task<IActionResult> confirmar(int id)
         {
             _logger.LogInformation($"🔥 Entró endpoint confirmar con ID: {id}");
+
             try
             {
                 using var connection = new SqlConnection(
@@ -245,73 +246,44 @@ namespace ClinicaAPI.Controllers
 
                 await connection.OpenAsync();
 
+                // =========================================================
+                // 1. BUSCAR LA CITA
+                // =========================================================
                 var cita = await connection.QueryFirstOrDefaultAsync<CitaDto>(@"
-                        SELECT
-                            a.Id,
-                            a.Fecha,
-                            a.Hora,
-                            a.Estado,
-                            b.Telefono,
-                            c.Telefono AS TelefonoDoctor,
-                            c.Nombre AS NombreDoctor,
-                            a.Clinica,
-                            a.Respondida,
-                            CONCAT(b.Nombre, ' ', b.Apellido) AS NombreCompleto
-                        FROM Citas a
-                        INNER JOIN Paciente b
-                            ON a.PacienteId = b.Id
-                        INNER JOIN Doctor c
-                            ON a.DoctorId = c.Id
-                        WHERE a.Id = @Id
-                    ", new { Id = id });
+            SELECT
+                a.Id,
+                a.Fecha,
+                a.Hora,
+                a.Estado,
+                b.Telefono,
+                c.Telefono AS TelefonoDoctor,
+                c.Nombre AS NombreDoctor,
+                a.Clinica,
+                a.Respondida,
+                CONCAT(b.Nombre, ' ', b.Apellido) AS NombreCompleto
+            FROM Citas a
+            INNER JOIN Paciente b
+                ON a.PacienteId = b.Id
+            INNER JOIN Doctor c
+                ON a.DoctorId = c.Id
+            WHERE a.Id = @Id
+        ", new { Id = id });
 
-                    _logger.LogInformation($"📊 SQL RESULT:");
-                    _logger.LogInformation($"Doctor: {cita.NombreDoctor}");
-                    _logger.LogInformation($"TelefonoDoctor: '{cita.TelefonoDoctor}'");
-                    _logger.LogInformation($"Paciente: {cita.NombreCompleto}");
-                    _logger.LogInformation($"Fecha: {cita.Fecha}");
 
+                // =========================================================
+                // 2. VALIDAR QUE LA CITA EXISTA
+                // =========================================================
                 if (cita == null)
-                    return NotFound("Cita no encontrada");
-
-                if (cita.Respondida)
                 {
-                    return Content(@"
-                    <div style='
-                        font-family: Arial, sans-serif;
-                        text-align: center;
-                        margin-top: 60px;
-                        padding: 30px;
-                    '>
-                        <h1 style='color: #d97706; font-size: 55px;'>
-                            ⚠️ Acción ya realizada
-                        </h1>
+                    _logger.LogWarning(
+                        $"❌ No se encontró la cita con ID: {id}"
+                    );
 
-                        <p style='font-size: 24px; color: #444; margin-top: 45px;'>
-                            Esta cita ya fue <b>confirmada</b>,
-                                              <b>cancelada</b> o <b>reprogramada</b>.
-                        </p>
-
-                        <p style='font-size: 20px; color: #666; margin-top: 35px;'>
-                            No se puede realizar nuevamente esta acción.
-                        </p>
-                    </div>
-                ", "text/html; charset=utf-8");
-                }
-
-                await connection.ExecuteAsync(@"
-                    UPDATE Citas
-                    SET Estado = 'Confirmada',
-                        Respondida = 1,
-                        FechaConfirmacion = GETDATE()
-                    WHERE Id = @Id
-                 ", new { Id = id });
-
-                       
-                return Content($@"
+                    return NotFound($@"
                 <html>
                 <head>
-                    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                    <meta name='viewport'
+                          content='width=device-width, initial-scale=1.0'>
                 </head>
 
                 <body style='
@@ -323,64 +295,479 @@ namespace ClinicaAPI.Controllers
 
                     <div style='
                         max-width:400px;
-                        margin:auto;
+                        margin:60px auto;
                         background:white;
                         padding:30px;
                         border-radius:12px;
                         text-align:center;
                         box-shadow:0 2px 10px rgba(0,0,0,0.1);
                     '>
-                        <div style='font-size:10px;'>{cita.Clinica} 🏥</div>
 
-                        <h2 style='color:#d32f2f;'>
-                            ✅ Cita confirmada
-                        </h2>
+                        <h1 style='color:#dc2626;'>
+                            ❌ Cita no encontrada
+                        </h1>
 
-                        <p style='font-size:18px;'>
-                            Gracias <strong>{cita.NombreCompleto}</strong>
+                        <p style='font-size:18px;color:#555;'>
+                            No existe una cita con el ID
+                            <strong>{id}</strong>.
                         </p>
 
-                       <p style='color:#555;'>
-                        Su cita fue confirmada correctamente.
-                    </p>
-
-                    <hr style='margin:25px 0;'>
-
-                    <p style='font-size:16px; color:#333;'>
-                        📢 Notificar al doctor:
-                    </p>
-
-                    <a href='https://api.whatsapp.com/send?phone={cita.TelefonoDoctor}&text=📢%20El%20paciente%20{cita.NombreCompleto}%20CONFIRMÓ%20la%20cita%20del%20día%20{cita.Fecha:dd/MM/yyyy}'
-                       style='
-                           display:inline-block;
-                           background-color:#25D366;
-                           color:white;
-                           padding:12px 18px;
-                           border-radius:8px;
-                           text-decoration:none;
-                           font-weight:bold;
-                           margin-top:10px;
-                       '
-                       target='_blank'>
-                       💬 Enviar WhatsApp al doctor
-                    </a>
-
-                        <hr style='margin:25px 0;'>
                     </div>
 
                 </body>
                 </html>
-                ", "text/html; charset=utf-8");
+            ");
+                }
+
+
+                // =========================================================
+                // 3. MOSTRAR INFORMACIÓN EN LOG
+                // =========================================================
+                _logger.LogInformation("📊 SQL RESULT:");
+                _logger.LogInformation($"ID: {cita.Id}");
+                _logger.LogInformation($"Doctor: {cita.NombreDoctor}");
+                _logger.LogInformation($"TelefonoDoctor: '{cita.TelefonoDoctor}'");
+                _logger.LogInformation($"Paciente: {cita.NombreCompleto}");
+                _logger.LogInformation($"Fecha: {cita.Fecha}");
+                _logger.LogInformation($"Hora: {cita.Hora}");
+                _logger.LogInformation($"Estado actual: {cita.Estado}");
+                _logger.LogInformation($"Respondida: {cita.Respondida}");
+
+
+                // =========================================================
+                // 4. VALIDAR SI YA FUE RESPONDIDA
+                // =========================================================
+                if (cita.Respondida)
+                {
+                    _logger.LogWarning(
+                        $"⚠️ La cita {id} ya fue respondida. " +
+                        $"Estado actual: {cita.Estado}"
+                    );
+
+                    return Content(@"
+                <html>
+
+                <head>
+                    <meta name='viewport'
+                          content='width=device-width, initial-scale=1.0'>
+                </head>
+
+                <body style='
+                    font-family: Arial, sans-serif;
+                    background-color:#f5f5f5;
+                    margin:0;
+                    padding:20px;
+                '>
+
+                    <div style='
+                        max-width:400px;
+                        margin:60px auto;
+                        background:white;
+                        padding:30px;
+                        border-radius:12px;
+                        text-align:center;
+                        box-shadow:0 2px 10px rgba(0,0,0,0.1);
+                    '>
+
+                        <h1 style='
+                            color:#d97706;
+                            font-size:45px;
+                        '>
+                            ⚠️
+                        </h1>
+
+                        <h2 style='color:#d97706;'>
+                            Acción ya realizada
+                        </h2>
+
+                        <p style='
+                            font-size:20px;
+                            color:#444;
+                            margin-top:30px;
+                        '>
+                            Esta cita ya fue
+                            <strong>confirmada</strong>,
+                            <strong>cancelada</strong>
+                            o <strong>reprogramada</strong>.
+                        </p>
+
+                        <p style='
+                            font-size:17px;
+                            color:#666;
+                            margin-top:25px;
+                        '>
+                            No se puede realizar nuevamente esta acción.
+                        </p>
+
+                    </div>
+
+                </body>
+                </html>
+            ", "text/html; charset=utf-8");
+                }
+
+
+                // =========================================================
+                // 5. VALIDAR QUE LA CITA ESTÉ PENDIENTE
+                // =========================================================
+                if (cita.Estado != "Pendiente")
+                {
+                    _logger.LogWarning(
+                        $"⚠️ Intento de confirmar cita {id} " +
+                        $"con estado actual: {cita.Estado}"
+                    );
+
+                    return Content($@"
+                <html>
+
+                <head>
+                    <meta name='viewport'
+                          content='width=device-width, initial-scale=1.0'>
+                </head>
+
+                <body style='
+                    font-family: Arial;
+                    background-color:#f5f5f5;
+                    margin:0;
+                    padding:20px;
+                '>
+
+                    <div style='
+                        max-width:400px;
+                        margin:60px auto;
+                        background:white;
+                        padding:30px;
+                        border-radius:12px;
+                        text-align:center;
+                        box-shadow:0 2px 10px rgba(0,0,0,0.1);
+                    '>
+
+                        <h1 style='color:#d97706;'>
+                            ⚠️ Cita no disponible
+                        </h1>
+
+                        <p style='
+                            font-size:18px;
+                            color:#444;
+                        '>
+                            Esta cita ya no está pendiente.
+                        </p>
+
+                        <p style='
+                            font-size:18px;
+                            color:#666;
+                        '>
+                            Estado actual:
+                            <strong>{cita.Estado}</strong>
+                        </p>
+
+                    </div>
+
+                </body>
+                </html>
+            ", "text/html; charset=utf-8");
+                }
+
+
+                // =========================================================
+                // 6. ACTUALIZAR CITA A CONFIRMADA
+                // =========================================================
+                var filasActualizadas = await connection.ExecuteAsync(@"
+            UPDATE Citas
+            SET
+                Estado = 'Confirmada',
+                Respondida = 1,
+                FechaConfirmacion = GETDATE()
+            WHERE Id = @Id
+              AND Estado = 'Pendiente'
+              AND Respondida = 0
+        ", new { Id = id });
+
+
+                // =========================================================
+                // 7. VERIFICAR QUE REALMENTE SE ACTUALIZÓ
+                // =========================================================
+                if (filasActualizadas == 0)
+                {
+                    _logger.LogWarning(
+                        $"⚠️ No se actualizó la cita {id}. " +
+                        $"Posiblemente ya fue procesada."
+                    );
+
+                    return Content(@"
+                <html>
+
+                <head>
+                    <meta name='viewport'
+                          content='width=device-width, initial-scale=1.0'>
+                </head>
+
+                <body style='
+                    font-family: Arial;
+                    background-color:#f5f5f5;
+                    margin:0;
+                    padding:20px;
+                '>
+
+                    <div style='
+                        max-width:400px;
+                        margin:60px auto;
+                        background:white;
+                        padding:30px;
+                        border-radius:12px;
+                        text-align:center;
+                        box-shadow:0 2px 10px rgba(0,0,0,0.1);
+                    '>
+
+                        <h1 style='color:#d97706;'>
+                            ⚠️ Acción no realizada
+                        </h1>
+
+                        <p style='font-size:18px;color:#555;'>
+                            La cita ya fue procesada o
+                            cambió de estado.
+                        </p>
+
+                    </div>
+
+                </body>
+                </html>
+            ", "text/html; charset=utf-8");
+                }
+
+
+                // =========================================================
+                // 8. LOG DE CONFIRMACIÓN
+                // =========================================================
+                _logger.LogInformation(
+                    $"✅ Cita {id} actualizada correctamente a CONFIRMADA"
+                );
+
+
+                // =========================================================
+                // 9. GENERAR URL PARA NOTIFICAR AL DOCTOR
+                // =========================================================
+                var mensajeDoctor =
+                    $"📢 El paciente {cita.NombreCompleto} " +
+                    $"CONFIRMÓ la cita del día " +
+                    $"{cita.Fecha:dd/MM/yyyy}";
+
+                var mensajeDoctorUrl =
+                    Uri.EscapeDataString(mensajeDoctor);
+
+                var telefonoDoctor =
+                    cita.TelefonoDoctor?.Replace("+", "")
+                                       .Replace(" ", "")
+                                       .Replace("-", "")
+                                       .Replace("(", "")
+                                       .Replace(")", "");
+
+
+                // =========================================================
+                // 10. RESPUESTA HTML
+                // =========================================================
+                return Content($@"
+            <html>
+
+            <head>
+
+                <meta name='viewport'
+                      content='width=device-width, initial-scale=1.0'>
+
+                <title>Cita confirmada</title>
+
+            </head>
+
+            <body style='
+                font-family:Arial, sans-serif;
+                background-color:#f5f5f5;
+                margin:0;
+                padding:20px;
+            '>
+
+                <div style='
+                    max-width:400px;
+                    margin:60px auto;
+                    background:white;
+                    padding:30px;
+                    border-radius:12px;
+                    text-align:center;
+                    box-shadow:0 2px 10px rgba(0,0,0,0.1);
+                '>
+
+                    <div style='
+                        font-size:16px;
+                        color:#555;
+                        margin-bottom:20px;
+                    '>
+                        {cita.Clinica} 🏥
+                    </div>
+
+
+                    <div style='
+                        font-size:55px;
+                        margin-bottom:10px;
+                    '>
+                        ✅
+                    </div>
+
+
+                    <h2 style='
+                        color:#16a34a;
+                        margin-top:10px;
+                    '>
+                        Cita confirmada
+                    </h2>
+
+
+                    <p style='
+                        font-size:18px;
+                        color:#333;
+                    '>
+                        Gracias
+                        <strong>{cita.NombreCompleto}</strong>
+                    </p>
+
+
+                    <p style='
+                        font-size:16px;
+                        color:#555;
+                    '>
+                        Su cita fue confirmada correctamente.
+                    </p>
+
+
+                    <hr style='margin:25px 0;'>
+
+
+                    <p style='
+                        font-size:16px;
+                        color:#333;
+                    '>
+                        📅 Fecha:
+                        <strong>
+                            {cita.Fecha:dd/MM/yyyy}
+                        </strong>
+                    </p>
+
+
+                    <p style='
+                        font-size:16px;
+                        color:#333;
+                    '>
+                        🕐 Hora:
+                        <strong>
+                            {cita.Hora}
+                        </strong>
+                    </p>
+
+
+                    <hr style='margin:25px 0;'>
+
+
+                    <p style='
+                        font-size:16px;
+                        color:#333;
+                    '>
+                        📢 Notificar al doctor
+                    </p>
+
+
+                    {(string.IsNullOrWhiteSpace(telefonoDoctor)
+                                ? ""
+                                : $@"
+                            <a href='https://api.whatsapp.com/send?phone={telefonoDoctor}&text={mensajeDoctorUrl}'
+                               style='
+                                   display:inline-block;
+                                   background-color:#25D366;
+                                   color:white;
+                                   padding:12px 18px;
+                                   border-radius:8px;
+                                   text-decoration:none;
+                                   font-weight:bold;
+                                   margin-top:10px;
+                               '
+                               target='_blank'>
+
+                                💬 Enviar WhatsApp al doctor
+
+                            </a>
+                        ")}
+
+
+                    <hr style='margin:25px 0;'>
+
+
+                    <p style='
+                        font-size:14px;
+                        color:#888;
+                    '>
+                        Puede cerrar esta ventana.
+                    </p>
+
+                </div>
+
+            </body>
+            </html>
+        ", "text/html; charset=utf-8");
             }
             catch (Exception ex)
             {
-                return Content($@"
-            ERROR:
-            {ex.Message}
+                // =========================================================
+                // ERROR
+                // =========================================================
 
-            INNER:
-            {ex.InnerException?.Message}
-        ");
+                _logger.LogError(
+                    ex,
+                    $"❌ Error confirmando la cita {id}"
+                );
+
+                return Content($@"
+            <html>
+
+            <head>
+
+                <meta name='viewport'
+                      content='width=device-width, initial-scale=1.0'>
+
+            </head>
+
+            <body style='
+                font-family:Arial;
+                background-color:#f5f5f5;
+                padding:20px;
+            '>
+
+                <div style='
+                    max-width:500px;
+                    margin:60px auto;
+                    background:white;
+                    padding:30px;
+                    border-radius:12px;
+                    box-shadow:0 2px 10px rgba(0,0,0,0.1);
+                '>
+
+                    <h2 style='color:#dc2626;'>
+                        ❌ Error al confirmar la cita
+                    </h2>
+
+                    <p>
+                        <strong>Mensaje:</strong>
+                        {System.Net.WebUtility.HtmlEncode(ex.Message)}
+                    </p>
+
+                    <p>
+                        <strong>Detalle:</strong>
+                        {System.Net.WebUtility.HtmlEncode(
+                                    ex.InnerException?.Message ?? "N/A"
+                                )}
+                    </p>
+
+                </div>
+
+            </body>
+            </html>
+        ", "text/html; charset=utf-8");
             }
         }
 
