@@ -1457,7 +1457,7 @@
         public static string QueryVerHistorialClinico = @"                          							
               SELECT 
                 CONCAT(b.[Nombre], ' ', b.[Apellido]) AS NombrePaciente,
-                b.[Telefono],
+                 b.[Telefono], b.Genero, b.EstadoCivil,
                 STRING_AGG(
                     CONCAT(
                         a.Motivo, 
@@ -1477,6 +1477,8 @@
                 b.Nombre, 
                 b.Apellido,
                 b.Telefono,
+                 b.Genero,
+                    b.EstadoCivil,
                 a.Clinica     
             ORDER BY UltimaFechaCita DESC
 		                  ";
