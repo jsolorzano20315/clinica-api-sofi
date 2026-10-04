@@ -11,9 +11,9 @@ namespace ClinicaAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class PacientesController : ControllerBase 
+    public class PacientesController : ControllerBase
     {
-        private readonly AuthService _authService; 
+        private readonly AuthService _authService;
         public PacientesController(IConfiguration configuration, AuthService authService)
         {
             Configuration = configuration;
@@ -21,10 +21,11 @@ namespace ClinicaAPI.Controllers
         }
 
         public IConfiguration Configuration { get; }
+        public string ConnectionStrings { get; private set; }
 
         [HttpPost]
         [Route("GuardarExpedienteCompleto")]
-        public async Task<IActionResult> GuardarExpedienteCompleto( [FromBody] ExpedienteClinicoRequest model)
+        public async Task<IActionResult> GuardarExpedienteCompleto([FromBody] ExpedienteClinicoRequest model)
         {
             if (model?.Paciente == null)
             {
@@ -756,7 +757,7 @@ namespace ClinicaAPI.Controllers
 
         [HttpDelete()]
         [Route("EliminarPacientes/{id}")]
-        public async Task<IActionResult> EliminarPacientes(int id) 
+        public async Task<IActionResult> EliminarPacientes(int id)
         {
 
             var userName = User.Identity?.Name ?? "Anonimo";
@@ -777,7 +778,7 @@ namespace ClinicaAPI.Controllers
 
         [HttpGet()]
         [Route("ListaPacientes/{clinica}")]
-        public async Task<IActionResult> ListaPacientes(string clinica) 
+        public async Task<IActionResult> ListaPacientes(string clinica)
         {
 
             var userName = User.Identity?.Name ?? "Anonimo";
@@ -800,7 +801,7 @@ namespace ClinicaAPI.Controllers
 
         [HttpGet()]
         [Route("ListaReportePacientes/{clinica}/{fechaInicio}/{fechaFin}")]
-        public async Task<IActionResult> ListaReportePacientes(string clinica, DateTime fechaInicio, DateTime fechaFin) 
+        public async Task<IActionResult> ListaReportePacientes(string clinica, DateTime fechaInicio, DateTime fechaFin)
         {
 
             var userName = User.Identity?.Name ?? "Anonimo";
@@ -811,7 +812,7 @@ namespace ClinicaAPI.Controllers
             List<PacienteDto> result;
             var query = new StringBuilder();
 
-            query.AppendLine(StaticResources.QueryListaPacientesFecha); 
+            query.AppendLine(StaticResources.QueryListaPacientesFecha);
 
             DynamicParameters parameters = new DynamicParameters();
 
@@ -828,7 +829,7 @@ namespace ClinicaAPI.Controllers
 
         [HttpGet()]
         [Route("TotalPacientes/{clinica}")]
-        public async Task<IActionResult> TotalPacientes(string clinica) 
+        public async Task<IActionResult> TotalPacientes(string clinica)
         {
 
             var query = new StringBuilder();
@@ -846,6 +847,754 @@ namespace ClinicaAPI.Controllers
 
             return Ok(result);
 
+        }   
+
+        // ============================================================
+        // SUBIR DOCUMENTOS / IMÁGENES DEL PACIENTE
+        // ============================================================
+
+        [HttpPost]
+        [Route("SubirImagenes")]
+        [RequestSizeLimit(100 * 1024 * 1024)]
+        public async Task<IActionResult> SubirImagenes([FromForm] int IdPaciente, [FromForm] string Clinica, [FromForm] List<IFormFile> Archivos)
+        {
+            // =========================================================
+            // CONEXIÓN SQL
+            // =========================================================
+
+            using var connection = new SqlConnection(
+                Configuration.GetConnectionString("EntitiesContext")
+            );
+
+            await connection.OpenAsync();
+
+            // =========================================================
+            // VALIDAR PACIENTE
+            // =========================================================
+
+            if (IdPaciente <= 0)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    mensaje = "El IdPaciente es obligatorio."
+                });
+            }
+
+            // =========================================================
+            // VALIDAR CLÍNICA
+            // =========================================================
+
+            if (string.IsNullOrWhiteSpace(Clinica))
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    mensaje = "La clínica es obligatoria."
+                });
+            }
+
+            // =========================================================
+            // VALIDAR ARCHIVOS
+            // =========================================================
+
+            if (Archivos == null || Archivos.Count == 0)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    mensaje = "Debe seleccionar al menos un archivo."
+                });
+            }
+
+            // =========================================================
+            // VALIDAR QUE EL PACIENTE EXISTA
+            // =========================================================
+
+            const string sqlPaciente = @"
+                        SELECT COUNT(1)
+                        FROM Paciente
+                        WHERE Id = @IdPaciente
+                          AND Clinica = @Clinica;
+                    ";
+
+            var existePaciente = await connection.ExecuteScalarAsync<int>(
+                sqlPaciente,
+                new
+                {
+                    IdPaciente,
+                    Clinica
+                }
+            );
+
+            if (existePaciente == 0)
+            {
+                return NotFound(new
+                {
+                    success = false,
+                    mensaje = "El paciente no existe en la clínica indicada."
+                });
+            }
+
+            // =========================================================
+            // OBTENER CONFIGURACIÓN
+            // =========================================================
+
+            var rutaBase = Configuration[
+                "ArchivosPacientes:RutaBase"
+            ];
+
+            if (string.IsNullOrWhiteSpace(rutaBase))
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    mensaje =
+                        "No está configurada la ruta de almacenamiento de documentos."
+                });
+            }
+
+            var tamanoMaximoMB =
+                Configuration.GetValue<int?>(
+                    "ArchivosPacientes:TamanoMaximoMB"
+                ) ?? 10;
+
+            long tamanoMaximoBytes =
+                tamanoMaximoMB * 1024L * 1024L;
+
+            // =========================================================
+            // EXTENSIONES PERMITIDAS
+            // =========================================================
+
+            var extensionesPermitidas =
+                new HashSet<string>(
+                    StringComparer.OrdinalIgnoreCase)
+                {
+                ".jpg",
+                ".jpeg",
+                ".png",
+                ".webp",
+                ".pdf"
+                };
+
+            // =========================================================
+            // CREAR CARPETA
+            // =========================================================
+
+            var clinicaSegura =
+                LimpiarNombreCarpeta(Clinica);
+
+            var carpetaPaciente = Path.Combine(
+                rutaBase,
+                clinicaSegura,
+                $"Paciente_{IdPaciente}"
+            );
+
+            Directory.CreateDirectory(carpetaPaciente);
+
+            // =========================================================
+            // LISTA DE ARCHIVOS GUARDADOS
+            // =========================================================
+
+            var archivosGuardados = new List<object>();
+
+            // =========================================================
+            // PROCESAR ARCHIVOS
+            // =========================================================
+
+            foreach (var archivo in Archivos)
+            {
+                // -----------------------------------------------------
+                // VALIDAR ARCHIVO
+                // -----------------------------------------------------
+
+                if (archivo == null || archivo.Length == 0)
+                {
+                    continue;
+                }
+
+                // -----------------------------------------------------
+                // VALIDAR TAMAÑO
+                // -----------------------------------------------------
+
+                if (archivo.Length > tamanoMaximoBytes)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        mensaje =
+                            $"El archivo '{archivo.FileName}' supera el tamaño máximo permitido de {tamanoMaximoMB} MB."
+                    });
+                }
+
+                // -----------------------------------------------------
+                // EXTENSIÓN
+                // -----------------------------------------------------
+
+                var extension =
+                    Path.GetExtension(archivo.FileName);
+
+                if (string.IsNullOrWhiteSpace(extension) ||
+                    !extensionesPermitidas.Contains(extension))
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        mensaje =
+                            $"El archivo '{archivo.FileName}' no tiene una extensión permitida."
+                    });
+                }
+
+                // -----------------------------------------------------
+                // NOMBRE ORIGINAL
+                // -----------------------------------------------------
+
+                var nombreOriginal =
+                    Path.GetFileName(archivo.FileName);
+
+                var nombreSinExtension =
+                    Path.GetFileNameWithoutExtension(
+                        nombreOriginal
+                    );
+
+                nombreSinExtension =
+                    LimpiarNombreArchivo(
+                        nombreSinExtension
+                    );
+
+                // -----------------------------------------------------
+                // GENERAR NOMBRE ÚNICO
+                // -----------------------------------------------------
+
+                var fechaArchivo =
+                    DateTime.Now.ToString(
+                        "yyyyMMdd_HHmmss"
+                    );
+
+                var identificador =
+                    Guid.NewGuid()
+                        .ToString("N")
+                        .Substring(0, 8);
+
+                var nombreArchivo =
+                    $"{fechaArchivo}_{identificador}_{nombreSinExtension}{extension}";
+
+                // -----------------------------------------------------
+                // RUTA FÍSICA
+                // -----------------------------------------------------
+
+                var rutaArchivo =
+                    Path.Combine(
+                        carpetaPaciente,
+                        nombreArchivo
+                    );
+
+                // -----------------------------------------------------
+                // GUARDAR ARCHIVO FÍSICAMENTE
+                // -----------------------------------------------------
+
+                await using (
+                    var stream = new FileStream(
+                        rutaArchivo,
+                        FileMode.CreateNew,
+                        FileAccess.Write,
+                        FileShare.None
+                    ))
+                {
+                    await archivo.CopyToAsync(stream);
+                }
+
+                // =====================================================
+                // REGISTRAR EN dbo.DocumentosPaciente
+                // =====================================================
+
+                const string sqlDocumento = @"
+                            INSERT INTO dbo.DocumentosPaciente
+                            (
+                                IdImagen,
+                                NombreArchivo,
+                                TipoArchivo,
+                                RutaArchivo,
+                                Fecha
+                            )
+                            VALUES
+                            (
+                                @IdImagen,
+                                @NombreArchivo,
+                                @TipoArchivo,
+                                @RutaArchivo,
+                                GETDATE()
+                            );
+
+                            SELECT CAST(SCOPE_IDENTITY() AS INT);
+                        ";
+
+                int idArchivoImagen =
+                    await connection.QuerySingleAsync<int>(
+                        sqlDocumento,
+                        new
+                        {
+                            IdImagen = IdPaciente,
+                            NombreArchivo = nombreArchivo,
+                            TipoArchivo = archivo.ContentType,
+                            RutaArchivo = rutaArchivo
+                        }
+                    );
+
+                // =====================================================
+                // AGREGAR A RESPUESTA
+                // =====================================================
+
+                archivosGuardados.Add(new
+                {
+                    idArchivoImagen = idArchivoImagen,
+                    idImagen = IdPaciente,
+                    nombreOriginal = nombreOriginal,
+                    nombreArchivo = nombreArchivo,
+                    tipoArchivo = archivo.ContentType,
+                    rutaArchivo = rutaArchivo,
+                    tamanoBytes = archivo.Length,
+                    fecha = DateTime.Now
+                });
+            }
+
+            // =========================================================
+            // VALIDAR QUE HAYA ARCHIVOS
+            // =========================================================
+
+            if (archivosGuardados.Count == 0)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    mensaje = "No se pudo guardar ningún archivo."
+                });
+            }
+
+            // =========================================================
+            // RESPUESTA
+            // =========================================================
+
+            return Ok(new
+            {
+                success = true,
+                mensaje =
+                    "Los archivos fueron guardados y registrados correctamente.",
+                idPaciente = IdPaciente,
+                clinica = Clinica,
+                cantidadArchivos = archivosGuardados.Count,
+                archivos = archivosGuardados
+            });
         }
+
+
+         //  ============================================================
+         //   LIMPIAR NOMBRE DE CARPETA
+         //   ============================================================
+
+            private static string LimpiarNombreCarpeta(string nombre)
+            {
+                if (string.IsNullOrWhiteSpace(nombre))
+                    return "SinClinica";
+
+                foreach (var caracter in Path.GetInvalidFileNameChars())
+                {
+                    nombre = nombre.Replace(caracter, '_');
+                }
+
+                return nombre.Trim();
+            }
+
+
+         //   ============================================================
+         //   LIMPIAR NOMBRE DE ARCHIVO
+         //  ============================================================
+
+            private static string LimpiarNombreArchivo(string nombre)
+            {
+                if (string.IsNullOrWhiteSpace(nombre))
+                    return "archivo";
+
+                foreach (var caracter in Path.GetInvalidFileNameChars())
+                {
+                    nombre = nombre.Replace(caracter, '_');
+                }
+
+                return nombre.Trim();
+            }
+
+
+        // =========================================================
+        // LISTAR DOCUMENTOS DE UN PACIENTE
+        // =========================================================
+        [HttpGet]
+        [Route("ListaDocumentos/{idPaciente:int}")]
+        public async Task<IActionResult> ListaDocumentos(int idPaciente)
+        {
+            try
+            {
+                if (idPaciente <= 0)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "El IdPaciente no es válido."
+                    });
+                }
+
+                var connectionString =
+                    Configuration.GetConnectionString("EntitiesContext");
+
+                if (string.IsNullOrWhiteSpace(connectionString))
+                {
+                    return StatusCode(500, new
+                    {
+                        success = false,
+                        message = "No se encontró la cadena de conexión 'EntitiesContext'."
+                    });
+                }
+
+                using var connection = new SqlConnection(connectionString);
+
+                const string sql = @"
+            SELECT
+                IdArchivoImagen,
+                IdImagen,
+                NombreArchivo,
+                TipoArchivo,
+                RutaArchivo,
+                Fecha
+            FROM dbo.DocumentosPaciente
+            WHERE IdImagen = @IdPaciente
+            ORDER BY Fecha DESC, IdArchivoImagen DESC;
+        ";
+
+                var documentos = await connection.QueryAsync(sql, new
+                {
+                    IdPaciente = idPaciente
+                });
+
+                return Ok(new
+                {
+                    success = true,
+                    idPaciente = idPaciente,
+                    cantidad = documentos.Count(),
+                    documentos = documentos
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error al consultar los documentos del paciente.",
+                    error = ex.Message
+                });
+            }
+        }
+
+
+        // =========================================================
+        // DESCARGAR / VISUALIZAR DOCUMENTO
+        // =========================================================
+        [HttpGet]
+        [Route("DescargarDocumento/{idDocumento:int}")]
+        public async Task<IActionResult> DescargarDocumento(int idDocumento)
+        {
+            try
+            {
+                if (idDocumento <= 0)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "El IdDocumento no es válido."
+                    });
+                }
+
+                var connectionString =
+                    Configuration.GetConnectionString("EntitiesContext");
+
+                using var connection = new SqlConnection(connectionString);
+
+                const string sql = @"
+                        SELECT
+                            IdArchivoImagen,
+                            NombreArchivo,
+                            TipoArchivo,
+                            RutaArchivo
+                        FROM dbo.DocumentosPaciente
+                        WHERE IdArchivoImagen = @IdDocumento;
+                    ";
+
+                var documento = await connection.QueryFirstOrDefaultAsync(sql, new
+                {
+                    IdDocumento = idDocumento
+                });
+
+                if (documento == null)
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = "El documento no existe."
+                    });
+                }
+
+                string rutaArchivo = documento.RutaArchivo;
+
+                if (string.IsNullOrWhiteSpace(rutaArchivo))
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = "El documento no tiene una ruta registrada."
+                    });
+                }
+
+                if (!System.IO.File.Exists(rutaArchivo))
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = "El archivo físico no existe en el servidor."
+                    });
+                }
+
+                var bytes = await System.IO.File.ReadAllBytesAsync(rutaArchivo);
+
+                return File(
+                    bytes,
+                    documento.TipoArchivo,
+                    documento.NombreArchivo
+                );
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error al descargar el documento.",
+                    error = ex.Message
+                });
+            }
+        }
+
+
+        // =========================================================
+        // ELIMINAR DOCUMENTO
+        // =========================================================
+        [HttpDelete]
+        [Route("EliminarDocumento/{idDocumento:int}")]
+        public async Task<IActionResult> EliminarDocumento(int idDocumento)
+        {
+            string? rutaArchivo = null;
+
+            try
+            {
+                if (idDocumento <= 0)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "El IdDocumento no es válido."
+                    });
+                }
+
+                var connectionString =
+                    Configuration.GetConnectionString("EntitiesContext");
+
+                using var connection = new SqlConnection(connectionString);
+
+
+                await connection.OpenAsync();
+
+                using var transaction = connection.BeginTransaction();
+
+                const string sqlBuscar = @"
+                    SELECT
+                        IdArchivoImagen,
+                        NombreArchivo,
+                        RutaArchivo
+                    FROM dbo.DocumentosPaciente
+                    WHERE IdArchivoImagen = @IdDocumento;
+                ";
+
+                var documento =
+                    await connection.QueryFirstOrDefaultAsync(
+                        sqlBuscar,
+                        new
+                        {
+                            IdDocumento = idDocumento
+                        },
+                        transaction
+                    );
+
+                if (documento == null)
+                {
+                    transaction.Rollback();
+
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = "El documento no existe."
+                    });
+                }
+
+                rutaArchivo = documento.RutaArchivo;
+
+                // -------------------------------------------------
+                // ELIMINAR REGISTRO DE BASE DE DATOS
+                // -------------------------------------------------
+
+                const string sqlEliminar = @"
+                        DELETE FROM dbo.DocumentosPaciente
+                        WHERE IdArchivoImagen = @IdDocumento;
+                    ";
+
+                await connection.ExecuteAsync(
+                    sqlEliminar,
+                    new
+                    {
+                        IdDocumento = idDocumento
+                    },
+                    transaction
+                );
+
+                transaction.Commit();
+
+                // -------------------------------------------------
+                // ELIMINAR ARCHIVO FÍSICO
+                // -------------------------------------------------
+
+                if (!string.IsNullOrWhiteSpace(rutaArchivo) &&
+                    System.IO.File.Exists(rutaArchivo))
+                {
+                    System.IO.File.Delete(rutaArchivo);
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Documento eliminado correctamente.",
+                    idDocumento = idDocumento
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error al eliminar el documento.",
+                    error = ex.Message
+                });
+            }
+        }
+
+
+        // =========================================================
+        // VER DOCUMENTO
+        // =========================================================
+
+        [HttpGet]
+        [Route("VerDocumento/{idDocumento:int}")]
+        public async Task<IActionResult> VerDocumento(int idDocumento)
+        {
+            try
+            {
+                if (idDocumento <= 0)
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "El IdDocumento no es válido."
+                    });
+
+                var connectionString =
+                    Configuration.GetConnectionString("EntitiesContext");
+
+                using var connection =
+                    new SqlConnection(connectionString);
+
+                const string sql = @"
+                            SELECT
+                                IdArchivoImagen,
+                                NombreArchivo,
+                                TipoArchivo,
+                                RutaArchivo
+                            FROM dbo.DocumentosPaciente
+                            WHERE IdArchivoImagen = @IdDocumento;
+                        ";
+
+                var documento =
+                    await connection.QueryFirstOrDefaultAsync(
+                        sql,
+                        new { IdDocumento = idDocumento }
+                    );
+
+                if (documento == null)
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = "El documento no existe."
+                    });
+                }
+
+                string? rutaArchivo =
+                    documento.RutaArchivo;
+
+                if (string.IsNullOrWhiteSpace(rutaArchivo))
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = "El documento no tiene una ruta registrada."
+                    });
+                }
+
+                if (!System.IO.File.Exists(rutaArchivo))
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        message =
+                            "El registro existe, pero el archivo físico no existe."
+                    });
+                }
+
+                var bytes =
+                    await System.IO.File.ReadAllBytesAsync(
+                        rutaArchivo
+                    );
+
+                string tipoArchivo =
+                    string.IsNullOrWhiteSpace(documento.TipoArchivo)
+                        ? "application/octet-stream"
+                        : documento.TipoArchivo;
+
+                // IMPORTANTE:
+                // No se envía el nombre del archivo como tercer parámetro.
+                // Esto permite que el navegador intente visualizar
+                // imágenes y PDF directamente.
+                return File(
+                    bytes,
+                    tipoArchivo
+                );
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(
+                    500,
+                    new
+                    {
+                        success = false,
+                        message = "Error al visualizar el documento.",
+                        error = ex.Message
+                    }
+                );
+            }
+        }
+
     }
+
 }

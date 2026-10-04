@@ -51,7 +51,8 @@ namespace ClinicaAPI.Controllers
             parameters.Add("@PacienteId", model.PacienteId);
             parameters.Add("@DoctorId", model.DoctorId);
             parameters.Add("@Fecha", model.Fecha);
-            parameters.Add("@Hora", model.Hora ?? "");
+            //parameters.Add("@Hora", model.Hora ?? "");
+            parameters.Add("@Hora", DateTime.Now.TimeOfDay);
             parameters.Add("@Motivo", model.Motivo);
             parameters.Add("@Tipo", model.Tipo);
             parameters.Add("@Telefono", model.Telefono);
@@ -84,7 +85,8 @@ namespace ClinicaAPI.Controllers
 
             parameters.Add("@Id", model.Id);
             parameters.Add("@Fecha", model.Fecha);
-            parameters.Add("@Hora", model.Hora ?? "");
+            //parameters.Add("@Hora", model.Hora ?? "");
+            parameters.Add("@Hora", DateTime.Now.TimeOfDay);
             parameters.Add("@Estado", model.Estado);
             parameters.Add("@Tipo", model.Tipo);
             parameters.Add("@Motivo", model.Motivo);
