@@ -474,16 +474,44 @@ namespace ClinicaAPI.Controllers
                 // =========================================================
                 // 6. ACTUALIZAR CITA A CONFIRMADA
                 // =========================================================
+                //var filasActualizadas = await connection.ExecuteAsync(@"
+                //    UPDATE Citas
+                //    SET
+                //        Estado = 'Confirmada',
+                //        Respondida = 1,
+                //        FechaConfirmacion = GETDATE()
+                //    WHERE Id = @Id
+                //      AND Estado = 'Pendiente'
+                //      AND Respondida = 0
+                //", new { Id = id });
+
+                // =========================================================
+                // 6. ACTUALIZAR CITA A CONFIRMADA
+                //    Primera vez: solo incrementa el contador.
+                //    Segunda vez: confirma la cita.
+                // =========================================================
+
                 var filasActualizadas = await connection.ExecuteAsync(@"
-            UPDATE Citas
-            SET
-                Estado = 'Confirmada',
-                Respondida = 1,
-                FechaConfirmacion = GETDATE()
-            WHERE Id = @Id
-              AND Estado = 'Pendiente'
-              AND Respondida = 0
-        ", new { Id = id });
+                        UPDATE Citas
+                        SET
+                            VecesRespondida = VecesRespondida + 1,
+                            Estado = CASE 
+                                        WHEN VecesRespondida + 1 >= 2 
+                                        THEN 'Confirmada'
+                                        ELSE Estado
+                                      END,
+                            Respondida = CASE 
+                                           WHEN VecesRespondida + 1 >= 2 
+                                           THEN 1
+                                           ELSE Respondida
+                                         END,
+                            FechaConfirmacion = CASE 
+                                                  WHEN VecesRespondida + 1 >= 2 
+                                                  THEN GETDATE()
+                                                  ELSE FechaConfirmacion
+                                                END
+                        WHERE Id = @Id
+                    ", new { Id = id });
 
 
                 // =========================================================
