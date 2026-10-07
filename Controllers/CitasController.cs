@@ -252,24 +252,24 @@ namespace ClinicaAPI.Controllers
                 // 1. BUSCAR LA CITA
                 // =========================================================
                 var cita = await connection.QueryFirstOrDefaultAsync<CitaDto>(@"
-            SELECT
-                a.Id,
-                a.Fecha,
-                a.Hora,
-                a.Estado,
-                b.Telefono,
-                c.Telefono AS TelefonoDoctor,
-                c.Nombre AS NombreDoctor,
-                a.Clinica,
-                a.Respondida,
-                CONCAT(b.Nombre, ' ', b.Apellido) AS NombreCompleto
-            FROM Citas a
-            INNER JOIN Paciente b
-                ON a.PacienteId = b.Id
-            INNER JOIN Doctor c
-                ON a.DoctorId = c.Id
-            WHERE a.Id = @Id
-        ", new { Id = id });
+                        SELECT
+                            a.Id,
+                            a.Fecha,
+                            a.Hora,
+                            a.Estado,
+                            b.Telefono,
+                            c.Telefono AS TelefonoDoctor,
+                            c.Nombre AS NombreDoctor,
+                            a.Clinica,
+                            a.Respondida,
+                            CONCAT(b.Nombre, ' ', b.Apellido) AS NombreCompleto
+                        FROM Citas a
+                        INNER JOIN Paciente b
+                            ON a.PacienteId = b.Id
+                        INNER JOIN Doctor c
+                            ON a.DoctorId = c.Id
+                        WHERE a.Id = @Id
+                    ", new { Id = id });
 
 
                 // =========================================================
@@ -282,43 +282,43 @@ namespace ClinicaAPI.Controllers
                     );
 
                     return NotFound($@"
-                <html>
-                <head>
-                    <meta name='viewport'
-                          content='width=device-width, initial-scale=1.0'>
-                </head>
+                        <html>
+                        <head>
+                            <meta name='viewport'
+                                  content='width=device-width, initial-scale=1.0'>
+                        </head>
 
-                <body style='
-                    font-family: Arial;
-                    background-color:#f5f5f5;
-                    margin:0;
-                    padding:20px;
-                '>
+                        <body style='
+                            font-family: Arial;
+                            background-color:#f5f5f5;
+                            margin:0;
+                            padding:20px;
+                        '>
 
-                    <div style='
-                        max-width:400px;
-                        margin:60px auto;
-                        background:white;
-                        padding:30px;
-                        border-radius:12px;
-                        text-align:center;
-                        box-shadow:0 2px 10px rgba(0,0,0,0.1);
-                    '>
+                            <div style='
+                                max-width:400px;
+                                margin:60px auto;
+                                background:white;
+                                padding:30px;
+                                border-radius:12px;
+                                text-align:center;
+                                box-shadow:0 2px 10px rgba(0,0,0,0.1);
+                            '>
 
-                        <h1 style='color:#dc2626;'>
-                            ❌ Cita no encontrada
-                        </h1>
+                                <h1 style='color:#dc2626;'>
+                                    ❌ Cita no encontrada
+                                </h1>
 
-                        <p style='font-size:18px;color:#555;'>
-                            No existe una cita con el ID
-                            <strong>{id}</strong>.
-                        </p>
+                                <p style='font-size:18px;color:#555;'>
+                                    No existe una cita con el ID
+                                    <strong>{id}</strong>.
+                                </p>
 
-                    </div>
+                            </div>
 
-                </body>
-                </html>
-            ");
+                        </body>
+                        </html>
+                    ");
                 }
 
 
@@ -347,65 +347,65 @@ namespace ClinicaAPI.Controllers
                     );
 
                     return Content(@"
-                <html>
+                        <html>
 
-                <head>
-                    <meta name='viewport'
-                          content='width=device-width, initial-scale=1.0'>
-                </head>
+                        <head>
+                            <meta name='viewport'
+                                  content='width=device-width, initial-scale=1.0'>
+                        </head>
 
-                <body style='
-                    font-family: Arial, sans-serif;
-                    background-color:#f5f5f5;
-                    margin:0;
-                    padding:20px;
-                '>
-
-                    <div style='
-                        max-width:400px;
-                        margin:60px auto;
-                        background:white;
-                        padding:30px;
-                        border-radius:12px;
-                        text-align:center;
-                        box-shadow:0 2px 10px rgba(0,0,0,0.1);
-                    '>
-
-                        <h1 style='
-                            color:#d97706;
-                            font-size:45px;
+                        <body style='
+                            font-family: Arial, sans-serif;
+                            background-color:#f5f5f5;
+                            margin:0;
+                            padding:20px;
                         '>
-                            ⚠️
-                        </h1>
 
-                        <h2 style='color:#d97706;'>
-                            Acción ya realizada
-                        </h2>
+                            <div style='
+                                max-width:400px;
+                                margin:60px auto;
+                                background:white;
+                                padding:30px;
+                                border-radius:12px;
+                                text-align:center;
+                                box-shadow:0 2px 10px rgba(0,0,0,0.1);
+                            '>
 
-                        <p style='
-                            font-size:20px;
-                            color:#444;
-                            margin-top:30px;
-                        '>
-                            Esta cita ya fue
-                            <strong>confirmada</strong>,
-                            <strong>cancelada</strong>
-                            o <strong>reprogramada</strong>.
-                        </p>
+                                <h1 style='
+                                    color:#d97706;
+                                    font-size:45px;
+                                '>
+                                    ⚠️
+                                </h1>
 
-                        <p style='
-                            font-size:17px;
-                            color:#666;
-                            margin-top:25px;
-                        '>
-                            No se puede realizar nuevamente esta acción.
-                        </p>
+                                <h2 style='color:#d97706;'>
+                                    Acción ya realizada
+                                </h2>
 
-                    </div>
+                                <p style='
+                                    font-size:20px;
+                                    color:#444;
+                                    margin-top:30px;
+                                '>
+                                    Esta cita ya fue
+                                    <strong>confirmada</strong>,
+                                    <strong>cancelada</strong>
+                                    o <strong>reprogramada</strong>.
+                                </p>
 
-                </body>
-                </html>
-            ", "text/html; charset=utf-8");
+                                <p style='
+                                    font-size:17px;
+                                    color:#666;
+                                    margin-top:25px;
+                                '>
+                                    No se puede realizar nuevamente esta acción.
+                                </p>
+
+                            </div>
+
+                        </body>
+                        </html>
+                    ", "text/html; charset=utf-8");
                 }
 
 
@@ -420,54 +420,54 @@ namespace ClinicaAPI.Controllers
                     );
 
                     return Content($@"
-                <html>
+                        <html>
 
-                <head>
-                    <meta name='viewport'
-                          content='width=device-width, initial-scale=1.0'>
-                </head>
+                        <head>
+                            <meta name='viewport'
+                                  content='width=device-width, initial-scale=1.0'>
+                        </head>
 
-                <body style='
-                    font-family: Arial;
-                    background-color:#f5f5f5;
-                    margin:0;
-                    padding:20px;
-                '>
-
-                    <div style='
-                        max-width:400px;
-                        margin:60px auto;
-                        background:white;
-                        padding:30px;
-                        border-radius:12px;
-                        text-align:center;
-                        box-shadow:0 2px 10px rgba(0,0,0,0.1);
-                    '>
-
-                        <h1 style='color:#d97706;'>
-                            ⚠️ Cita no disponible
-                        </h1>
-
-                        <p style='
-                            font-size:18px;
-                            color:#444;
+                        <body style='
+                            font-family: Arial;
+                            background-color:#f5f5f5;
+                            margin:0;
+                            padding:20px;
                         '>
-                            Esta cita ya no está pendiente.
-                        </p>
 
-                        <p style='
-                            font-size:18px;
-                            color:#666;
-                        '>
-                            Estado actual:
-                            <strong>{cita.Estado}</strong>
-                        </p>
+                            <div style='
+                                max-width:400px;
+                                margin:60px auto;
+                                background:white;
+                                padding:30px;
+                                border-radius:12px;
+                                text-align:center;
+                                box-shadow:0 2px 10px rgba(0,0,0,0.1);
+                            '>
 
-                    </div>
+                                <h1 style='color:#d97706;'>
+                                    ⚠️ Cita no disponible
+                                </h1>
 
-                </body>
-                </html>
-            ", "text/html; charset=utf-8");
+                                <p style='
+                                    font-size:18px;
+                                    color:#444;
+                                '>
+                                    Esta cita ya no está pendiente.
+                                </p>
+
+                                <p style='
+                                    font-size:18px;
+                                    color:#666;
+                                '>
+                                    Estado actual:
+                                    <strong>{cita.Estado}</strong>
+                                </p>
+
+                            </div>
+
+                        </body>
+                        </html>
+                    ", "text/html; charset=utf-8");
                 }
 
 
@@ -490,7 +490,6 @@ namespace ClinicaAPI.Controllers
                 //    Primera vez: solo incrementa el contador.
                 //    Segunda vez: confirma la cita.
                 // =========================================================
-
                 var filasActualizadas = await connection.ExecuteAsync(@"
                         UPDATE Citas
                         SET
@@ -525,44 +524,44 @@ namespace ClinicaAPI.Controllers
                     );
 
                     return Content(@"
-                <html>
+                        <html>
 
-                <head>
-                    <meta name='viewport'
-                          content='width=device-width, initial-scale=1.0'>
-                </head>
+                        <head>
+                            <meta name='viewport'
+                                  content='width=device-width, initial-scale=1.0'>
+                        </head>
 
-                <body style='
-                    font-family: Arial;
-                    background-color:#f5f5f5;
-                    margin:0;
-                    padding:20px;
-                '>
+                        <body style='
+                            font-family: Arial;
+                            background-color:#f5f5f5;
+                            margin:0;
+                            padding:20px;
+                        '>
 
-                    <div style='
-                        max-width:400px;
-                        margin:60px auto;
-                        background:white;
-                        padding:30px;
-                        border-radius:12px;
-                        text-align:center;
-                        box-shadow:0 2px 10px rgba(0,0,0,0.1);
-                    '>
+                            <div style='
+                                max-width:400px;
+                                margin:60px auto;
+                                background:white;
+                                padding:30px;
+                                border-radius:12px;
+                                text-align:center;
+                                box-shadow:0 2px 10px rgba(0,0,0,0.1);
+                            '>
 
-                        <h1 style='color:#d97706;'>
-                            ⚠️ Acción no realizada
-                        </h1>
+                                <h1 style='color:#d97706;'>
+                                    ⚠️ Acción no realizada
+                                </h1>
 
-                        <p style='font-size:18px;color:#555;'>
-                            La cita ya fue procesada o
-                            cambió de estado.
-                        </p>
+                                <p style='font-size:18px;color:#555;'>
+                                    La cita ya fue procesada o
+                                    cambió de estado.
+                                </p>
 
-                    </div>
+                            </div>
 
-                </body>
-                </html>
-            ", "text/html; charset=utf-8");
+                        </body>
+                        </html>
+                    ", "text/html; charset=utf-8");
                 }
 
 
@@ -597,110 +596,110 @@ namespace ClinicaAPI.Controllers
                 // 10. RESPUESTA HTML
                 // =========================================================
                 return Content($@"
-            <html>
+                <html>
 
-            <head>
+                <head>
 
-                <meta name='viewport'
-                      content='width=device-width, initial-scale=1.0'>
+                    <meta name='viewport'
+                          content='width=device-width, initial-scale=1.0'>
 
-                <title>Cita confirmada</title>
+                    <title>Cita confirmada</title>
 
-            </head>
+                </head>
 
-            <body style='
-                font-family:Arial, sans-serif;
-                background-color:#f5f5f5;
-                margin:0;
-                padding:20px;
-            '>
-
-                <div style='
-                    max-width:400px;
-                    margin:60px auto;
-                    background:white;
-                    padding:30px;
-                    border-radius:12px;
-                    text-align:center;
-                    box-shadow:0 2px 10px rgba(0,0,0,0.1);
+                <body style='
+                    font-family:Arial, sans-serif;
+                    background-color:#f5f5f5;
+                    margin:0;
+                    padding:20px;
                 '>
 
                     <div style='
-                        font-size:16px;
-                        color:#555;
-                        margin-bottom:20px;
+                        max-width:400px;
+                        margin:60px auto;
+                        background:white;
+                        padding:30px;
+                        border-radius:12px;
+                        text-align:center;
+                        box-shadow:0 2px 10px rgba(0,0,0,0.1);
                     '>
-                        {cita.Clinica} 🏥
-                    </div>
+
+                        <div style='
+                            font-size:16px;
+                            color:#555;
+                            margin-bottom:20px;
+                        '>
+                            {cita.Clinica} 🏥
+                        </div>
 
 
-                    <div style='
-                        font-size:55px;
-                        margin-bottom:10px;
-                    '>
-                        ✅
-                    </div>
+                        <div style='
+                            font-size:55px;
+                            margin-bottom:10px;
+                        '>
+                            ✅
+                        </div>
 
 
-                    <h2 style='
-                        color:#16a34a;
-                        margin-top:10px;
-                    '>
-                        Cita confirmada
-                    </h2>
+                        <h2 style='
+                            color:#16a34a;
+                            margin-top:10px;
+                        '>
+                            Cita confirmada
+                        </h2>
 
 
-                    <p style='
-                        font-size:18px;
-                        color:#333;
-                    '>
-                        Gracias
-                        <strong>{cita.NombreCompleto}</strong>
-                    </p>
+                        <p style='
+                            font-size:18px;
+                            color:#333;
+                        '>
+                            Gracias
+                            <strong>{cita.NombreCompleto}</strong>
+                        </p>
 
 
-                    <p style='
-                        font-size:16px;
-                        color:#555;
-                    '>
-                        Su cita fue confirmada correctamente.
-                    </p>
+                        <p style='
+                            font-size:16px;
+                            color:#555;
+                        '>
+                            Su cita fue confirmada correctamente.
+                        </p>
 
 
-                    <hr style='margin:25px 0;'>
+                        <hr style='margin:25px 0;'>
 
 
-                    <p style='
-                        font-size:16px;
-                        color:#333;
-                    '>
-                        📅 Fecha:
-                        <strong>
-                            {cita.Fecha:dd/MM/yyyy}
-                        </strong>
-                    </p>
+                        <p style='
+                            font-size:16px;
+                            color:#333;
+                        '>
+                            📅 Fecha:
+                            <strong>
+                                {cita.Fecha:dd/MM/yyyy}
+                            </strong>
+                        </p>
 
 
-                    <p style='
-                        font-size:16px;
-                        color:#333;
-                    '>
-                        🕐 Hora:
-                        <strong>
-                            {cita.Hora}
-                        </strong>
-                    </p>
+                        <p style='
+                            font-size:16px;
+                            color:#333;
+                        '>
+                            🕐 Hora:
+                            <strong>
+                                {cita.Hora}
+                            </strong>
+                        </p>
 
 
-                    <hr style='margin:25px 0;'>
+                        <hr style='margin:25px 0;'>
 
 
-                    <p style='
-                        font-size:16px;
-                        color:#333;
-                    '>
-                        📢 Notificar al doctor
-                    </p>
+                        <p style='
+                            font-size:16px;
+                            color:#333;
+                        '>
+                            📢 Notificar al doctor
+                        </p>
 
 
                     {(string.IsNullOrWhiteSpace(telefonoDoctor)
@@ -725,21 +724,21 @@ namespace ClinicaAPI.Controllers
                         ")}
 
 
-                    <hr style='margin:25px 0;'>
+                            <hr style='margin:25px 0;'>
 
 
-                    <p style='
-                        font-size:14px;
-                        color:#888;
-                    '>
-                        Puede cerrar esta ventana.
-                    </p>
+                            <p style='
+                                font-size:14px;
+                                color:#888;
+                            '>
+                                Puede cerrar esta ventana.
+                            </p>
 
-                </div>
+                        </div>
 
-            </body>
-            </html>
-        ", "text/html; charset=utf-8");
+                    </body>
+                    </html>
+                ", "text/html; charset=utf-8");
             }
             catch (Exception ex)
             {
@@ -753,51 +752,51 @@ namespace ClinicaAPI.Controllers
                 );
 
                 return Content($@"
-            <html>
+                    <html>
 
-            <head>
+                    <head>
 
-                <meta name='viewport'
-                      content='width=device-width, initial-scale=1.0'>
+                        <meta name='viewport'
+                              content='width=device-width, initial-scale=1.0'>
 
-            </head>
+                    </head>
 
-            <body style='
-                font-family:Arial;
-                background-color:#f5f5f5;
-                padding:20px;
-            '>
+                    <body style='
+                        font-family:Arial;
+                        background-color:#f5f5f5;
+                        padding:20px;
+                    '>
 
-                <div style='
-                    max-width:500px;
-                    margin:60px auto;
-                    background:white;
-                    padding:30px;
-                    border-radius:12px;
-                    box-shadow:0 2px 10px rgba(0,0,0,0.1);
-                '>
+                        <div style='
+                            max-width:500px;
+                            margin:60px auto;
+                            background:white;
+                            padding:30px;
+                            border-radius:12px;
+                            box-shadow:0 2px 10px rgba(0,0,0,0.1);
+                        '>
 
-                    <h2 style='color:#dc2626;'>
-                        ❌ Error al confirmar la cita
-                    </h2>
+                            <h2 style='color:#dc2626;'>
+                                ❌ Error al confirmar la cita
+                            </h2>
 
-                    <p>
-                        <strong>Mensaje:</strong>
-                        {System.Net.WebUtility.HtmlEncode(ex.Message)}
-                    </p>
+                            <p>
+                                <strong>Mensaje:</strong>
+                                {System.Net.WebUtility.HtmlEncode(ex.Message)}
+                            </p>
 
-                    <p>
-                        <strong>Detalle:</strong>
-                        {System.Net.WebUtility.HtmlEncode(
-                                    ex.InnerException?.Message ?? "N/A"
-                                )}
-                    </p>
+                            <p>
+                                <strong>Detalle:</strong>
+                                {System.Net.WebUtility.HtmlEncode(
+                                            ex.InnerException?.Message ?? "N/A"
+                                        )}
+                            </p>
 
-                </div>
+                        </div>
 
-            </body>
-            </html>
-        ", "text/html; charset=utf-8");
+                    </body>
+                    </html>
+                ", "text/html; charset=utf-8");
             }
         }
 

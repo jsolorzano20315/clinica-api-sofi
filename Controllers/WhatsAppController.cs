@@ -74,7 +74,7 @@ public class WhatsAppController : ControllerBase
         // Mensaje que recibirá el paciente
         var mensaje =
                  $"Hola {cita.NombreCompleto}\n\n" +
-                 $"Le recordamos su cita para el {cita.Fecha:dd/MM/yyyy}.\n\n" +
+                 $"Le recordamos su cita para esta semana.\n\n" +
                  $"Agradeceremos que nos confirme su asistencia.\n\n" +
                  $"Quedamos atentos a su confirmación.\n\n" +
                  $"Saludos cordiales,\n" +
