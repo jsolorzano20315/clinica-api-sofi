@@ -710,6 +710,11 @@ namespace ClinicaAPI.Controllers
                     model.Direccion
                 );
 
+                parametrosEditar.Add(
+                   "@FechaModificacion",
+                     DateTime.Now
+               );
+
                 var resultadoEditar =
                     (await connection.QueryAsync<Paciente>(
                         queryEditar.ToString(),
@@ -847,7 +852,7 @@ namespace ClinicaAPI.Controllers
 
             return Ok(result);
 
-        }   
+        }
 
         // ============================================================
         // SUBIR DOCUMENTOS / IMÁGENES DEL PACIENTE
@@ -1188,40 +1193,40 @@ namespace ClinicaAPI.Controllers
         }
 
 
-         //  ============================================================
-         //   LIMPIAR NOMBRE DE CARPETA
-         //   ============================================================
+        //  ============================================================
+        //   LIMPIAR NOMBRE DE CARPETA
+        //   ============================================================
 
-            private static string LimpiarNombreCarpeta(string nombre)
+        private static string LimpiarNombreCarpeta(string nombre)
+        {
+            if (string.IsNullOrWhiteSpace(nombre))
+                return "SinClinica";
+
+            foreach (var caracter in Path.GetInvalidFileNameChars())
             {
-                if (string.IsNullOrWhiteSpace(nombre))
-                    return "SinClinica";
-
-                foreach (var caracter in Path.GetInvalidFileNameChars())
-                {
-                    nombre = nombre.Replace(caracter, '_');
-                }
-
-                return nombre.Trim();
+                nombre = nombre.Replace(caracter, '_');
             }
 
+            return nombre.Trim();
+        }
 
-         //   ============================================================
-         //   LIMPIAR NOMBRE DE ARCHIVO
-         //  ============================================================
 
-            private static string LimpiarNombreArchivo(string nombre)
+        //   ============================================================
+        //   LIMPIAR NOMBRE DE ARCHIVO
+        //  ============================================================
+
+        private static string LimpiarNombreArchivo(string nombre)
+        {
+            if (string.IsNullOrWhiteSpace(nombre))
+                return "archivo";
+
+            foreach (var caracter in Path.GetInvalidFileNameChars())
             {
-                if (string.IsNullOrWhiteSpace(nombre))
-                    return "archivo";
-
-                foreach (var caracter in Path.GetInvalidFileNameChars())
-                {
-                    nombre = nombre.Replace(caracter, '_');
-                }
-
-                return nombre.Trim();
+                nombre = nombre.Replace(caracter, '_');
             }
+
+            return nombre.Trim();
+        }
 
 
         // =========================================================

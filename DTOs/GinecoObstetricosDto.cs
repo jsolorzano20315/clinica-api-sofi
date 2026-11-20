@@ -3,6 +3,7 @@
     public class GinecoObstetricosDto 
     {
         public int IdPaciente { get; set; }
+        public int IdGinecoObstetrico { get; set; }
         public string? Clinica { get; set; }
         public DateTime? Fecha { get; set; }
 

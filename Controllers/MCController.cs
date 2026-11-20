@@ -55,9 +55,32 @@ namespace ClinicaAPI.Controllers
             {
                 var userName = User.Identity?.Name ?? "Anonimo";
 
+                // =========================================================
+                // 1. VALIDAR SI VIENEN DATOS
+                // =========================================================
+                bool tieneDatos =
+                    model != null &&
+                    model.IdMC > 0 &&
+                    model.Peso > 0 &&
+                    model.Estatura > 0 &&
+                    model.IndiceMasaCorporal > 0 &&
+                    !string.IsNullOrWhiteSpace(model.Clinica);
+
+                // SI NO VIENEN DATOS -> NO HACER NADA
+                if (!tieneDatos)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No hay datos de medidas corporales para guardar.",
+                        resultado = new List<MC>()
+                    });
+                }
+
                 using var connection = new System.Data.SqlClient.SqlConnection(
                     Configuration.GetConnectionString("EntitiesContext")
                 );
+
+                await connection.OpenAsync();
 
                 // =========================================================
                 // 1. VALIDAR SI YA EXISTE EL REGISTRO
@@ -66,7 +89,11 @@ namespace ClinicaAPI.Controllers
                         SELECT COUNT(1)
                         FROM MC
                         WHERE IdPaciente = @IdPaciente
-                          AND Clinica = @Clinica;
+                          AND IdMC = @IdMC
+                          AND Peso = @Peso
+                          AND Estatura = @Estatura
+                          AND IndiceMasaCorporal  = @IndiceMasaCorporal 
+                          AND Clinica = @Clinica
                     ";
 
                 var existe = await connection.ExecuteScalarAsync<int>(
@@ -74,6 +101,10 @@ namespace ClinicaAPI.Controllers
                     new
                     {
                         IdPaciente = id,
+                        IdMC = model.IdMC,
+                        Peso = model.Peso,
+                        Estatura = model.Estatura,
+                        IndiceMasaCorporal = model.IndiceMasaCorporal,
                         Clinica = model.Clinica
                     }
                 );
@@ -149,14 +180,19 @@ namespace ClinicaAPI.Controllers
                 );
 
                 parametrosEditar.Add(
+                   "@IdMC",
+                   model.IdMC
+               );
+
+                parametrosEditar.Add(
                     "@Clinica",
                     model.Clinica
                 );
 
-                parametrosEditar.Add(
-                    "@Fecha",
-                    DateTime.Now
-                );
+                //parametrosEditar.Add(
+                //    "@Fecha",
+                //    DateTime.Now
+                //);
 
                 parametrosEditar.Add(
                     "@Peso",

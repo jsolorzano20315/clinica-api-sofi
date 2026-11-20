@@ -60,20 +60,45 @@ namespace ClinicaAPI.Controllers
                     {
                         var userName = User.Identity?.Name ?? "Anonimo";
 
-                        using var connection = new System.Data.SqlClient.SqlConnection(
-                            Configuration.GetConnectionString("EntitiesContext")
-                        );
+                // =========================================================
+                // 1. VALIDAR SI VIENEN DATOS
+                // =========================================================
+                bool tieneDatos =
+                    model != null &&
+                    model.IdGinecoObstetrico > 0 &&
+                    model.Gestaciones >= 0 &&
+                    model.Partos >= 0 &&
+                    model.Cesareas >= 0 &&
+                    model.Abortos >= 0 &&
+                    model.HijosVivos >= 0 &&
+                    model.HijosMuertos >= 0;
 
-                        // =========================================================
-                        // 0. VALIDAR GENERO DEL PACIENTE
-                        // Solo se permite guardar/editar GinecoObstetricos
-                        // cuando el género es FEMENINO (F).
-                        //
-                        // El género ya viene en model.Genero desde Vue,
-                        // por lo que NO consultamos la tabla Paciente/Pacientes.
-                        // =========================================================
+                // SI NO VIENEN DATOS -> NO HACER NADA
+                if (!tieneDatos)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No hay datos para guardar.",
+                        resultado = new List<MC>()
+                    });
+                }
 
-                        var genero = model.Genero?.Trim();
+                using var connection = new System.Data.SqlClient.SqlConnection(
+                    Configuration.GetConnectionString("EntitiesContext")
+                );
+
+                await connection.OpenAsync();
+
+                // =========================================================
+                // 0. VALIDAR GENERO DEL PACIENTE
+                // Solo se permite guardar/editar GinecoObstetricos
+                // cuando el género es FEMENINO (F).
+                //
+                // El género ya viene en model.Genero desde Vue,
+                // por lo que NO consultamos la tabla Paciente/Pacientes.
+                // =========================================================
+
+                var genero = model.Genero?.Trim();
 
                         if (!string.Equals(
                                 genero,
@@ -90,10 +115,17 @@ namespace ClinicaAPI.Controllers
                         // 1. VALIDAR SI YA EXISTE EL REGISTRO
                         // =========================================================
                         const string sqlExiste = @"
-                            SELECT COUNT(1)
-                            FROM GinecoObstetricos
-                            WHERE IdPaciente = @IdPaciente
-                              AND Clinica = @Clinica;
+                           SELECT COUNT(1)
+                                FROM GinecoObstetricos
+                                WHERE IdPaciente = @IdPaciente
+                                  AND IdGinecoObstetrico = @IdGinecoObstetrico
+                                  AND Gestaciones = @Gestaciones
+                                  AND Partos = @Partos
+                                  AND Cesareas = @Cesareas
+                                  AND Abortos = @Abortos
+                                  AND HijosVivos = @HijosVivos
+                                  AND HijosMuertos = @HijosMuertos
+                                  AND Clinica = @Clinica
                         ";
 
                         var existe = await connection.ExecuteScalarAsync<int>(
@@ -101,6 +133,13 @@ namespace ClinicaAPI.Controllers
                             new
                             {
                                 IdPaciente = id,
+                                IdGinecoObstetrico = model.IdGinecoObstetrico,
+                                Gestaciones = model.Gestaciones,
+                                Partos = model.Partos,
+                                Cesareas = model.Cesareas,
+                                Abortos = model.Abortos,
+                                HijosVivos = model.HijosVivos,
+                                HijosMuertos = model.HijosMuertos,
                                 Clinica = model.Clinica
                             }
                         );
@@ -175,8 +214,9 @@ namespace ClinicaAPI.Controllers
                             new DynamicParameters();
 
                         parametrosEditar.Add("@IdPaciente", id);
+                        parametrosEditar.Add("@IdGinecoObstetrico", model.IdGinecoObstetrico);
                         parametrosEditar.Add("@Clinica", model.Clinica);
-                        parametrosEditar.Add("@Fecha", DateTime.Now);
+                        //parametrosEditar.Add("@Fecha", DateTime.Now);
 
                         parametrosEditar.Add(
                             "@Gestaciones",

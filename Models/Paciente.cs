@@ -7,6 +7,7 @@
         public string? Apellido { get; set; }
         public DateTime? FechaNacimiento { get; set; }
         public DateTime? Fecha { get; set; }
+        public DateTime? FechaModificacion { get; set; } 
         public string? Telefono { get; set; }
         public string? Genero { get; set; }
         public string? EstadoCivil { get; set; } 

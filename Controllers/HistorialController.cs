@@ -41,7 +41,7 @@ namespace ClinicaAPI.Controllers
             using var connection = new System.Data.SqlClient.SqlConnection(Configuration.GetConnectionString("EntitiesContext"));
             result = (await connection.QueryAsync<HistorialClinicoDto>(query.ToString(), parameters)).ToList();
 
-            return Ok(result ?? new List<HistorialClinicoDto>());
+             return Ok(result ?? new List<HistorialClinicoDto>());
 
         }
 

@@ -47,9 +47,7 @@ namespace ClinicaAPI.Controllers
 
         [HttpPut()]
         [Route("EditarAntecedentesQuirurgicos/{id}")]
-        public async Task<IActionResult> EditarAntecedentesQuirurgicos(
-    int id,
-    AntecedentesQuirurgicos model)
+        public async Task<IActionResult> EditarAntecedentesQuirurgicos(int id, AntecedentesQuirurgicos model)
         {
             try
             {
@@ -63,11 +61,11 @@ namespace ClinicaAPI.Controllers
                 // 1. VALIDAR SI YA EXISTE EL REGISTRO
                 // =========================================================
                 const string sqlExiste = @"
-            SELECT COUNT(1)
-            FROM AntecedentesQuirurgicos
-            WHERE IdPaciente = @IdPaciente
-              AND Clinica = @Clinica;
-        ";
+                            SELECT COUNT(1)
+                            FROM AntecedentesQuirurgicos
+                            WHERE IdPaciente = @IdPaciente
+                              AND Clinica = @Clinica;
+                        ";
 
                 var existe = await connection.ExecuteScalarAsync<int>(
                     sqlExiste,

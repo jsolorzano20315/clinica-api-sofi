@@ -8,7 +8,8 @@
         public string Nombre { get; set; }
         public string Apellido { get; set; }
         public DateTime FechaNacimiento { get; set; }
-        public DateTime Fecha { get; set; } 
+        public DateTime Fecha { get; set; }
+        public DateTime FechaModificacion { get; set; } 
         public string Telefono { get; set; }
         public string Genero { get; set; }
         public string EstadoCivil { get; set; }
@@ -42,12 +43,13 @@
         // INMUNIZACIÓN
         // ==========================================
         public DateTime? FechaEstadoInmunizacion { get; set; }
-        public string EstadoInmunizacion { get; set; } 
+        public string EstadoInmunizacion { get; set; }
 
 
         // ==========================================
         // GINECO-OBSTÉTRICOS
         // ==========================================
+        public int? IdGinecoObstetrico { get; set; } 
         public DateTime? FechaGinecoObstetricos { get; set; }
         public int? Gestaciones { get; set; }
         public int? Partos { get; set; }
@@ -59,6 +61,7 @@
         // ==========================================
         // ACTIVIDAD FÍSICA
         // ==========================================
+        public int? IdActividadFisica { get; set; }
         public DateTime? FechaActividadFisica { get; set; }
         public string NivelActividadFisica { get; set; }
 
@@ -84,6 +87,7 @@
         // ==========================================
         // EXAMEN FÍSICO
         // ==========================================
+        public int? IdExamenFisico { get; set; }
         public DateTime? FechaExamenFisico { get; set; }
         public string PresionArterial { get; set; }
         public int? FrecuenciaCardiaca { get; set; }
@@ -95,6 +99,7 @@
         // ==========================================
         // ÍNDICE DE MASA CORPORAL
         // ==========================================
+        public int? IdMC { get; set; }
         public DateTime? FechaMC { get; set; }
         public decimal? Peso { get; set; }
         public decimal? Estatura { get; set; }

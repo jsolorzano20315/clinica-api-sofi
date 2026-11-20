@@ -63,11 +63,11 @@ namespace ClinicaAPI.Controllers
                 // 1. VALIDAR SI YA EXISTE EL REGISTRO
                 // =========================================================
                 const string sqlExiste = @"
-            SELECT COUNT(1)
-            FROM AntecedentesPersonales
-            WHERE IdPaciente = @IdPaciente
-              AND Clinica = @Clinica;
-        ";
+                            SELECT COUNT(1)
+                            FROM AntecedentesPersonales
+                            WHERE IdPaciente = @IdPaciente
+                              AND Clinica = @Clinica;
+                        ";
 
                 var existe = await connection.ExecuteScalarAsync<int>(
                     sqlExiste,
@@ -94,10 +94,7 @@ namespace ClinicaAPI.Controllers
                     parametrosGuardar.Add("@IdPaciente", id);
                     parametrosGuardar.Add("@Clinica", model.Clinica);
                     parametrosGuardar.Add("@Fecha", DateTime.Now);
-                    parametrosGuardar.Add(
-                        "@AntecedentesPersona",
-                        model.AntecedentesPersona
-                    );
+                    parametrosGuardar.Add("@AntecedentesPersona", model.AntecedentesPersona);
 
                     var resultadoGuardar =
                         (await connection.QueryAsync<AntecedentesPersonales>(
@@ -121,10 +118,7 @@ namespace ClinicaAPI.Controllers
 
                 parametrosEditar.Add("@IdPaciente", id);
                 parametrosEditar.Add("@Fecha", DateTime.Now);
-                parametrosEditar.Add(
-                    "@AntecedentesPersona",
-                    model.AntecedentesPersona
-                );
+                parametrosEditar.Add("@AntecedentesPersona", model.AntecedentesPersona);
 
                 var resultadoEditar =
                     (await connection.QueryAsync<AntecedentesPersonales>(

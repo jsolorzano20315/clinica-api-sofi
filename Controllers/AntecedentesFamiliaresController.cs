@@ -46,9 +46,7 @@ namespace ClinicaAPI.Controllers
 
         [HttpPut()]
         [Route("EditarAntecedentesFamiliares/{id}")]
-        public async Task<IActionResult> EditarAntecedentesFamiliares(
-    int id,
-    AntecedentesFamiliares model)
+        public async Task<IActionResult> EditarAntecedentesFamiliares(int id, AntecedentesFamiliares model)
         {
             try
             {
@@ -62,11 +60,11 @@ namespace ClinicaAPI.Controllers
                 // 1. VALIDAR SI YA EXISTE EL REGISTRO
                 // =========================================================
                 const string sqlExiste = @"
-            SELECT COUNT(1)
-            FROM AntecedentesFamiliares
-            WHERE IdPaciente = @IdPaciente
-              AND Clinica = @Clinica;
-        ";
+                                    SELECT COUNT(1)
+                                    FROM AntecedentesFamiliares
+                                    WHERE IdPaciente = @IdPaciente
+                                      AND Clinica = @Clinica;
+                                ";
 
                 var existe = await connection.ExecuteScalarAsync<int>(
                     sqlExiste,
@@ -93,10 +91,7 @@ namespace ClinicaAPI.Controllers
                     parametrosGuardar.Add("@IdPaciente", id);
                     parametrosGuardar.Add("@Clinica", model.Clinica);
                     parametrosGuardar.Add("@Fecha", DateTime.Now);
-                    parametrosGuardar.Add(
-                        "@AntecedentesFamilia",
-                        model.AntecedentesFamilia
-                    );
+                    parametrosGuardar.Add("@AntecedentesFamilia", model.AntecedentesFamilia);
 
                     var resultadoGuardar =
                         (await connection.QueryAsync<AntecedentesFamiliares>(
@@ -121,10 +116,7 @@ namespace ClinicaAPI.Controllers
                 parametrosEditar.Add("@IdPaciente", id);
                 parametrosEditar.Add("@Clinica", model.Clinica);
                 parametrosEditar.Add("@Fecha", DateTime.Now);
-                parametrosEditar.Add(
-                    "@AntecedentesFamilia",
-                    model.AntecedentesFamilia
-                );
+                parametrosEditar.Add("@AntecedentesFamilia", model.AntecedentesFamilia);
 
                 var resultadoEditar =
                     (await connection.QueryAsync<AntecedentesFamiliares>(

@@ -12,7 +12,7 @@ namespace ClinicaAPI.Controllers
     public class ExamenFisicoController : ControllerBase
     {
         private readonly AuthService _authService;
-        public ExamenFisicoController(IConfiguration configuration, AuthService authService) 
+        public ExamenFisicoController(IConfiguration configuration, AuthService authService)
         {
             Configuration = configuration;
             _authService = authService ?? throw new ArgumentNullException(nameof(authService));
@@ -54,176 +54,221 @@ namespace ClinicaAPI.Controllers
 
         [HttpPut()]
         [Route("EditarExamenFisico/{id}")]
-        public async Task<IActionResult> EditarExamenFisico( int id, ExamenFisico model) 
+        public async Task<IActionResult> EditarExamenFisico(int id, ExamenFisico model)
+        {
+            try
+            {
+                var userName = User.Identity?.Name ?? "Anonimo";
+
+                // =========================================================
+                // 1. VALIDAR SI VIENEN DATOS
+                // =========================================================
+                bool tieneDatos =
+                    model != null &&
+                    model.IdExamenFisico > 0 &&
+                    !string.IsNullOrWhiteSpace(model.PresionArterial) &&
+                    model.FrecuenciaCardiaca > 0 &&
+                    model.FrecuenciaRespiratoria > 0 &&
+                    model.SaturacionOxigeno > 0 &&
+                    model.Peso > 0 &&
+                    model.Temperatura > 0 &&
+                    !string.IsNullOrWhiteSpace(model.Clinica);
+
+                // SI NO VIENEN DATOS -> NO HACER NADA
+                if (!tieneDatos)
                 {
-                    try
+                    return Ok(new
                     {
-                        var userName = User.Identity?.Name ?? "Anonimo";
+                        mensaje = "No hay datos para guardar.",
+                        resultado = new List<MC>()
+                    });
+                }
 
-                        using var connection = new System.Data.SqlClient.SqlConnection(
-                            Configuration.GetConnectionString("EntitiesContext")
-                        );
+                using var connection = new System.Data.SqlClient.SqlConnection(
+                    Configuration.GetConnectionString("EntitiesContext")
+                );
 
-                        // =========================================================
-                        // 1. VALIDAR SI YA EXISTE EL REGISTRO
-                        // =========================================================
-                        const string sqlExiste = @"
+                await connection.OpenAsync();
+
+                // =========================================================
+                // 1. VALIDAR SI YA EXISTE EL REGISTRO
+                // =========================================================
+                const string sqlExiste = @"
                                 SELECT COUNT(1)
                                 FROM ExamenFisico
                                 WHERE IdPaciente = @IdPaciente
+                                  AND   IdExamenFisico = @IdExamenFisico
+                                  AND   PresionArterial = @PresionArterial
+                                  AND   FrecuenciaCardiaca = @FrecuenciaCardiaca
+                                  AND   FrecuenciaRespiratoria = @FrecuenciaRespiratoria
+                                  AND   SaturacionOxigeno = @SaturacionOxigeno
+                                  AND   Peso = @Peso
+                                  AND   Temperatura = @Temperatura
                                   AND Clinica = @Clinica;
                             ";
 
-                        var existe = await connection.ExecuteScalarAsync<int>(
-                            sqlExiste,
-                            new
-                            {
-                                IdPaciente = id,
-                                Clinica = model.Clinica
-                            }
-                        );
-
-                        // =========================================================
-                        // 2. SI NO EXISTE -> INSERTAR
-                        // =========================================================
-                        if (existe == 0)
-                        {
-                            var queryGuardar = new StringBuilder();
-
-                            queryGuardar.AppendLine(
-                                StaticResources.QueryCrearExamenFisico
-                            );
-
-                            DynamicParameters parametrosGuardar =
-                                new DynamicParameters();
-
-                            parametrosGuardar.Add(
-                                "@IdPaciente",
-                                id
-                            );
-
-                            parametrosGuardar.Add(
-                                "@Clinica",
-                                model.Clinica
-                            );
-
-                            parametrosGuardar.Add(
-                                "@Fecha",
-                                DateTime.Now
-                            );
-
-                            parametrosGuardar.Add(
-                                "@PresionArterial",
-                                model.PresionArterial
-                            );
-
-                            parametrosGuardar.Add(
-                                "@FrecuenciaCardiaca",
-                                model.FrecuenciaCardiaca
-                            );
-
-                            parametrosGuardar.Add(
-                                "@FrecuenciaRespiratoria",
-                                model.FrecuenciaRespiratoria
-                            );
-
-                            parametrosGuardar.Add(
-                                "@SaturacionOxigeno",
-                                model.SaturacionOxigeno
-                            );
-
-                            parametrosGuardar.Add(
-                                "@Peso",
-                                model.Peso
-                            );
-
-                            parametrosGuardar.Add(
-                                "@Temperatura",
-                                model.Temperatura
-                            );
-
-                            var resultadoGuardar =
-                                (await connection.QueryAsync<ExamenFisico>(
-                                    queryGuardar.ToString(),
-                                    parametrosGuardar
-                                )).ToList();
-
-                            return Ok(resultadoGuardar);
-                        }
-
-                        // =========================================================
-                        // 3. SI EXISTE -> ACTUALIZAR
-                        // =========================================================
-                        var queryEditar = new StringBuilder();
-
-                        queryEditar.AppendLine(
-                            StaticResources.QueryModificarExamenFisico
-                        );
-
-                        DynamicParameters parametrosEditar =
-                            new DynamicParameters();
-
-                        parametrosEditar.Add(
-                            "@IdPaciente",
-                            id
-                        );
-
-                        parametrosEditar.Add(
-                            "@Clinica",
-                            model.Clinica
-                        );
-
-                        parametrosEditar.Add(
-                            "@Fecha",
-                            DateTime.Now
-                        );
-
-                        parametrosEditar.Add(
-                            "@PresionArterial",
-                            model.PresionArterial
-                        );
-
-                        parametrosEditar.Add(
-                            "@FrecuenciaCardiaca",
-                            model.FrecuenciaCardiaca
-                        );
-
-                        parametrosEditar.Add(
-                            "@FrecuenciaRespiratoria",
-                            model.FrecuenciaRespiratoria
-                        );
-
-                        parametrosEditar.Add(
-                            "@SaturacionOxigeno",
-                            model.SaturacionOxigeno
-                        );
-
-                        parametrosEditar.Add(
-                            "@Peso",
-                            model.Peso
-                        );
-
-                        parametrosEditar.Add(
-                            "@Temperatura",
-                            model.Temperatura
-                        );
-
-                        var resultadoEditar =
-                            (await connection.QueryAsync<ExamenFisico>(
-                                queryEditar.ToString(),
-                                parametrosEditar
-                            )).ToList();
-
-                        return Ok(resultadoEditar);
-                    }
-                    catch (Exception ex)
+                var existe = await connection.ExecuteScalarAsync<int>(
+                    sqlExiste,
+                    new
                     {
-                        return BadRequest(new
-                        {
-                            mensaje = ex.Message
-                        });
+                        IdPaciente = id,
+                        IdExamenFisico = model.IdExamenFisico,
+                        PresionArterial = model.PresionArterial,
+                        FrecuenciaCardiaca = model.FrecuenciaCardiaca,
+                        FrecuenciaRespiratoria = model.FrecuenciaRespiratoria,
+                        SaturacionOxigeno = model.SaturacionOxigeno,
+                        Peso = model.Peso,
+                        Temperatura = model.Temperatura,
+                        Clinica = model.Clinica
                     }
+                );
+
+                // =========================================================
+                // 2. SI NO EXISTE -> INSERTAR
+                // =========================================================
+                if (existe == 0)
+                {
+                    var queryGuardar = new StringBuilder();
+
+                    queryGuardar.AppendLine(
+                        StaticResources.QueryCrearExamenFisico
+                    );
+
+                    DynamicParameters parametrosGuardar =
+                        new DynamicParameters();
+
+                    parametrosGuardar.Add(
+                        "@IdPaciente",
+                        id
+                    );
+
+                    parametrosGuardar.Add(
+                        "@Clinica",
+                        model.Clinica
+                    );
+
+                    parametrosGuardar.Add(
+                        "@Fecha",
+                        DateTime.Now
+                    );
+
+                    parametrosGuardar.Add(
+                        "@PresionArterial",
+                        model.PresionArterial
+                    );
+
+                    parametrosGuardar.Add(
+                        "@FrecuenciaCardiaca",
+                        model.FrecuenciaCardiaca
+                    );
+
+                    parametrosGuardar.Add(
+                        "@FrecuenciaRespiratoria",
+                        model.FrecuenciaRespiratoria
+                    );
+
+                    parametrosGuardar.Add(
+                        "@SaturacionOxigeno",
+                        model.SaturacionOxigeno
+                    );
+
+                    parametrosGuardar.Add(
+                        "@Peso",
+                        model.Peso
+                    );
+
+                    parametrosGuardar.Add(
+                        "@Temperatura",
+                        model.Temperatura
+                    );
+
+                    var resultadoGuardar =
+                        (await connection.QueryAsync<ExamenFisico>(
+                            queryGuardar.ToString(),
+                            parametrosGuardar
+                        )).ToList();
+
+                    return Ok(resultadoGuardar);
                 }
+
+                // =========================================================
+                // 3. SI EXISTE -> ACTUALIZAR
+                // =========================================================
+                var queryEditar = new StringBuilder();
+
+                queryEditar.AppendLine(
+                    StaticResources.QueryModificarExamenFisico
+                );
+
+                DynamicParameters parametrosEditar =
+                    new DynamicParameters();
+
+                parametrosEditar.Add(
+                    "@IdPaciente",
+                    id
+                );
+
+                parametrosEditar.Add(
+                   "@IdExamenFisico",
+                   model.IdExamenFisico 
+               );
+
+                parametrosEditar.Add(
+                    "@Clinica",
+                    model.Clinica
+                );
+
+                //parametrosEditar.Add(
+                //    "@Fecha",
+                //    DateTime.Now
+                //);
+
+                parametrosEditar.Add(
+                    "@PresionArterial",
+                    model.PresionArterial
+                );
+
+                parametrosEditar.Add(
+                    "@FrecuenciaCardiaca",
+                    model.FrecuenciaCardiaca
+                );
+
+                parametrosEditar.Add(
+                    "@FrecuenciaRespiratoria",
+                    model.FrecuenciaRespiratoria
+                );
+
+                parametrosEditar.Add(
+                    "@SaturacionOxigeno",
+                    model.SaturacionOxigeno
+                );
+
+                parametrosEditar.Add(
+                    "@Peso",
+                    model.Peso
+                );
+
+                parametrosEditar.Add(
+                    "@Temperatura",
+                    model.Temperatura
+                );
+
+                var resultadoEditar =
+                    (await connection.QueryAsync<ExamenFisico>(
+                        queryEditar.ToString(),
+                        parametrosEditar
+                    )).ToList();
+
+                return Ok(resultadoEditar);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    mensaje = ex.Message
+                });
+            }
+        }
 
 
 
@@ -259,7 +304,7 @@ namespace ClinicaAPI.Controllers
 
         [HttpGet()]
         [Route("ListaExamenFisico{clinica}")]
-        public async Task<IActionResult> ListaExamenFisico(string clinica) 
+        public async Task<IActionResult> ListaExamenFisico(string clinica)
         {
 
             var userName = User.Identity?.Name ?? "Anonimo";
@@ -267,7 +312,7 @@ namespace ClinicaAPI.Controllers
             List<ExamenFisico> result;
             var query = new StringBuilder();
 
-            query.AppendLine(StaticResources.QueryListaExamenFisico); 
+            query.AppendLine(StaticResources.QueryListaExamenFisico);
 
             DynamicParameters parameters = new DynamicParameters();
 
@@ -280,5 +325,3 @@ namespace ClinicaAPI.Controllers
         }
     }
 }
-
-

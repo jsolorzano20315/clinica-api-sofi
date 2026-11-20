@@ -93,6 +93,7 @@
                     Apellido,
                     FechaNacimiento,
                     Fecha,
+                    FechaModificacion,
                     Telefono,
                     Genero,
                     EstadoCivil,
@@ -106,6 +107,7 @@
                     @Apellido,
                     @FechaNacimiento,
                     @Fecha,
+                    @FechaModificacion,
                     @Telefono,
                     @Genero,
                     @EstadoCivil,
@@ -124,6 +126,7 @@
                       ,[Genero] = @Genero
                       ,[EstadoCivil] = @EstadoCivil
                       ,[Direccion] = @Direccion
+                      ,[FechaModificacion] = @FechaModificacion
                  WHERE Id = @Id
 		                  ";
 
@@ -185,6 +188,7 @@
                     -- ==========================================
                     -- GINECO-OBSTÉTRICOS
                     -- ==========================================
+                    GO.IdGinecoObstetrico,
                     GO.Fecha AS FechaGinecoObstetricos,
                     GO.Gestaciones,
                     GO.Partos,
@@ -196,6 +200,7 @@
                     -- ==========================================
                     -- ACTIVIDAD FÍSICA
                     -- ==========================================
+                    AFI.IdActividadFisica,
                     AFI.Fecha AS FechaActividadFisica,
                     AFI.NivelActividadFisica,
 
@@ -221,6 +226,7 @@
                     -- ==========================================
                     -- EXAMEN FÍSICO
                     -- ==========================================
+                    EF.IdExamenFisico,
                     EF.Fecha AS FechaExamenFisico,
                     EF.PresionArterial,
                     EF.FrecuenciaCardiaca,
@@ -232,6 +238,7 @@
                     -- ==========================================
                     -- ÍNDICE DE MASA CORPORAL
                     -- ==========================================
+                    MC.IdMC,
                     MC.Fecha AS FechaMC,
                     MC.Peso,
                     MC.Estatura,
@@ -301,13 +308,21 @@
                     ON INM.IdPaciente = P.Id
                     AND INM.Clinica = P.Clinica
 
-                LEFT JOIN GinecoObstetricos GO
-                    ON GO.IdPaciente = P.Id
-                    AND GO.Clinica = P.Clinica
+               OUTER APPLY (
+                    SELECT TOP 1 *
+                    FROM GinecoObstetricos GO
+                    WHERE GO.IdPaciente = P.Id
+                      AND GO.Clinica = P.Clinica
+                    ORDER BY GO.Fecha DESC
+                ) GO
 
-                LEFT JOIN ActividadFisica AFI
-                    ON AFI.IdPaciente = P.Id
-                    AND AFI.Clinica = P.Clinica
+                OUTER APPLY (
+                    SELECT TOP 1 *
+                    FROM ActividadFisica AFI
+                    WHERE AFI.IdPaciente = P.Id
+                      AND AFI.Clinica = P.Clinica
+                    ORDER BY AFI.Fecha DESC
+                ) AFI
 
                 LEFT JOIN Alergias AL
                     ON AL.IdPaciente = P.Id
@@ -321,13 +336,21 @@
                     ON HEA.IdPaciente = P.Id
                     AND HEA.Clinica = P.Clinica
 
-                LEFT JOIN ExamenFisico EF
-                    ON EF.IdPaciente = P.Id
-                    AND EF.Clinica = P.Clinica
+                OUTER APPLY (
+                    SELECT TOP 1 *
+                    FROM ExamenFisico EF
+                    WHERE EF.IdPaciente = P.Id
+                      AND EF.Clinica = P.Clinica
+                    ORDER BY EF.Fecha DESC
+                ) EF
 
-                LEFT JOIN MC
-                    ON MC.IdPaciente = P.Id
-                    AND MC.Clinica = P.Clinica
+                OUTER APPLY (
+                    SELECT TOP 1 *
+                    FROM MC
+                    WHERE MC.IdPaciente = P.Id
+                      AND MC.Clinica = P.Clinica
+                    ORDER BY MC.Fecha DESC
+                ) MC
 
                 LEFT JOIN ROAS
                     ON ROAS.IdPaciente = P.Id
@@ -564,6 +587,7 @@
                         HijosVivos = @HijosVivos,
                         HijosMuertos = @HijosMuertos
                     WHERE IdPaciente = @IdPaciente
+                      AND IdGinecoObstetrico = @IdGinecoObstetrico
 		                  ";
 
 
@@ -656,6 +680,7 @@
                         Fecha = @Fecha,
                         NivelActividadFisica = @NivelActividadFisica
                     WHERE IdPaciente = @IdPaciente
+                      AND IdActividadFisica = @IdActividadFisica
 		                  ";
 
         //Listar ActividadFisica
@@ -835,6 +860,7 @@
                         Peso = @Peso,
                         Temperatura = @Temperatura
                     WHERE IdPaciente = @IdPaciente
+                      AND IdExamenFisico = @IdExamenFisico
 		                  ";
 
         //Listar ExamenFisico
@@ -885,6 +911,7 @@
                     Estatura = @Estatura,
                     IndiceMasaCorporal = @IndiceMasaCorporal
                 WHERE IdPaciente = @IdPaciente
+                  AND IdMC =  @IdMC
 		                  ";
 
         //Listar IMC
@@ -1454,7 +1481,289 @@
         #region REPORTES CITAS   
 
         //Historial Clinico por Pacientes, fecha inicio y fecha fin
-        public static string QueryVerHistorialClinico = @"                          							
+        public static string QueryVerHistorialClinico = @"                   						
+           SELECT
+                    -- ==========================================
+                    -- PACIENTE
+                    -- ==========================================
+                    P.Id,
+                    P.Id AS IdPaciente,
+                    P.Nombre,
+                    P.Apellido,
+                    CONCAT(P.Nombre, ' ', P.Apellido) AS NombrePaciente,
+                    P.FechaNacimiento,
+                    P.Fecha,
+                    P.FechaModificacion AS UltimaFechaCita,
+                    P.Telefono,
+                    P.Genero,
+                    P.EstadoCivil,
+                    P.Direccion,
+                    P.Clinica,
+
+                    -- ==========================================
+                    -- ANTECEDENTES PERSONALES
+                    -- ==========================================
+                    AP.Fecha AS FechaAntecedentesPersonales,
+                    AP.AntecedentesPersona,
+
+                    -- ==========================================
+                    -- ANTECEDENTES FAMILIARES
+                    -- ==========================================
+                    AF.Fecha AS FechaAntecedentesFamiliares,
+                    AF.AntecedentesFamilia,
+
+                    -- ==========================================
+                    -- ANTECEDENTES QUIRÚRGICOS
+                    -- ==========================================
+                    AQ.Fecha AS FechaAntecedentesQuirurgicos,
+                    AQ.antecedentesQuirurgico,
+
+                    -- ==========================================
+                    -- HÁBITOS
+                    -- ==========================================
+                    H.Fecha AS FechaHabitos,
+                    H.DescripcionHabitos,
+
+                    -- ==========================================
+                    -- INMUNIZACIÓN
+                    -- ==========================================
+                    INM.Fecha AS FechaEstadoInmunizacion,
+                    INM.EstadoInmunizacion,
+
+                    -- ==========================================
+                    -- GINECO-OBSTÉTRICOS
+                    -- ==========================================
+                    GO.HistorialGinecoObstetricos,
+
+                    -- ==========================================
+                    -- ACTIVIDAD FÍSICA
+                    -- ==========================================
+                    AFI.HistorialActividadFisica,
+
+                    -- ==========================================
+                    -- ALERGIAS
+                    -- ==========================================
+                    AL.Fecha AS FechaAlergias,
+                    AL.EstadoAlergia,
+                    AL.Alergia,
+
+                    -- ==========================================
+                    -- MEDICACIÓN ACTUAL
+                    -- ==========================================
+                    MA.Fecha AS FechaMedicacionActual,
+                    MA.Medicacion,
+
+                    -- ==========================================
+                    -- HISTORIA DE ENFERMEDAD ACTUAL
+                    -- ==========================================
+                    HEA.Fecha AS FechaHistoriaEnfermedad,
+                    HEA.HistoriaEnfermedad,
+
+                    -- ==========================================
+                    -- EXAMEN FÍSICO (TODOS LOS REGISTROS)
+                    -- ==========================================
+                    EF.HistorialExamenFisico,
+
+                    -- ==========================================
+                    -- ÍNDICE DE MASA CORPORAL
+                    -- ==========================================
+                    MC.HistorialMC,
+
+                    -- ==========================================
+                    -- REVISIÓN DE APARATOS Y SISTEMAS
+                    -- ==========================================
+                    ROAS.Fecha AS FechaROAS,
+                    ROAS.RevisionAparatosSistemas,
+
+                    -- ==========================================
+                    -- LABORATORIOS
+                    -- ==========================================
+                    LAB.Fecha AS FechaLaboratorios,
+                    LAB.ResultadosLaboratorio,
+
+                    -- ==========================================
+                    -- ELECTROCARDIOGRAMA
+                    -- ==========================================
+                    ECG.Fecha AS FechaECG,
+                    ECG.InterpretacionElectrocardiograma,
+
+                    -- ==========================================
+                    -- IMÁGENES
+                    -- ==========================================
+                    IMG.Fecha AS FechaImagenes,
+                    IMG.EstudiosImagen,
+
+                    -- ==========================================
+                    -- RIESGO CARDIOVASCULAR
+                    -- ==========================================
+                    RC.Fecha AS FechaRiesgoCardiovascular,
+                    RC.ResultadoEvaluacion,
+
+                    -- ==========================================
+                    -- IMPRESIÓN DIAGNÓSTICA
+                    -- ==========================================
+                    ID.Fecha AS FechaImpresionDiagnostica,
+                    ID.Diagnostica,
+
+                    -- ==========================================
+                    -- PLAN TERAPÉUTICO
+                    -- ==========================================
+                    PT.Fecha AS FechaPlanTerapeutico,
+                    PT.TratamientoIndicado
+
+                FROM Paciente P
+
+                LEFT JOIN AntecedentesPersonales AP
+                    ON AP.IdPaciente = P.Id
+                    AND AP.Clinica = P.Clinica
+
+                LEFT JOIN AntecedentesFamiliares AF
+                    ON AF.IdPaciente = P.Id
+                    AND AF.Clinica = P.Clinica
+
+                LEFT JOIN AntecedentesQuirurgicos AQ
+                    ON AQ.IdPaciente = P.Id
+                    AND AQ.Clinica = P.Clinica
+
+                LEFT JOIN Habitos H
+                    ON H.IdPaciente = P.Id
+                    AND H.Clinica = P.Clinica
+
+                LEFT JOIN Inmunizacion INM
+                    ON INM.IdPaciente = P.Id
+                    AND INM.Clinica = P.Clinica
+
+                OUTER APPLY (
+                        SELECT
+                            STRING_AGG(
+                                CAST(
+                                    CONCAT(
+                                        ' Fecha: ', CONVERT(VARCHAR(10), GO.Fecha, 103),
+                                        ' | Gestaciones: ', GO.Gestaciones,
+                                        ' | Partos: ', GO.Partos,
+                                        ' | Cesareas: ', GO.Cesareas,
+                                        ' | Abortos: ', GO.Abortos,
+                                        ' | Hijos Vivos: ', GO.HijosVivos,
+                                        ' | Hijos Muertos: ', GO.HijosMuertos
+                                    ) AS NVARCHAR(MAX)
+                                ),
+                                CHAR(13) + CHAR(10)
+                            ) WITHIN GROUP (ORDER BY GO.Fecha DESC)
+                            AS HistorialGinecoObstetricos
+                        FROM GinecoObstetricos GO
+                        WHERE GO.IdPaciente = P.Id
+                          AND GO.Clinica = P.Clinica
+                    ) GO
+
+                OUTER APPLY (
+                    SELECT
+                        STRING_AGG(
+                            CAST(
+                                CONCAT(
+                                    ' Fecha: ', CONVERT(VARCHAR(10), AFI.Fecha, 103),
+                                    ' | Nivel actividad física: ', AFI.NivelActividadFisica
+                                ) AS NVARCHAR(MAX)
+                            ),
+                            CHAR(13) + CHAR(10)
+                        ) WITHIN GROUP (ORDER BY AFI.Fecha DESC)
+                        AS HistorialActividadFisica
+                    FROM ActividadFisica AFI
+                    WHERE AFI.IdPaciente = P.Id
+                      AND AFI.Clinica = P.Clinica
+                ) AFI
+
+                LEFT JOIN Alergias AL
+                    ON AL.IdPaciente = P.Id
+                    AND AL.Clinica = P.Clinica
+
+                LEFT JOIN MedicacionActual MA
+                    ON MA.IdPaciente = P.Id
+                    AND MA.Clinica = P.Clinica
+
+                LEFT JOIN HistoriaEnfermedadActual HEA
+                    ON HEA.IdPaciente = P.Id
+                    AND HEA.Clinica = P.Clinica
+
+                OUTER APPLY (
+                    SELECT
+                        STRING_AGG(
+                            CAST(
+                                CONCAT(
+                                    ' Fecha: ', CONVERT(VARCHAR(10), X.Fecha, 103),
+                                    ' | Presión arterial: ', X.PresionArterial,
+                                    ' | Frecuencia cardíaca: ', X.FrecuenciaCardiaca,
+                                    ' | Frecuencia respiratoria: ', X.FrecuenciaRespiratoria,
+                                    ' | Saturación oxígeno: ', X.SaturacionOxigeno,
+                                    ' | Peso: ', X.Peso,
+                                    ' | Temperatura: ', X.Temperatura
+                                ) AS NVARCHAR(MAX)
+                            ),
+                            CHAR(13) + CHAR(10)
+                        ) WITHIN GROUP (ORDER BY X.Fecha DESC)
+                        AS HistorialExamenFisico
+
+                    FROM ExamenFisico X
+                    WHERE X.IdPaciente = P.Id
+                      AND X.Clinica = P.Clinica
+
+                ) EF
+
+                OUTER APPLY (
+                        SELECT
+                            STRING_AGG(
+                                CAST(
+                                    CONCAT(
+                                        ' Fecha: ', CONVERT(VARCHAR(10), X.Fecha, 103),
+                                        ' | Peso: ', X.Peso,
+                                        ' | Estatura: ', X.Estatura,
+                                        ' | IMC: ', X.IndiceMasaCorporal
+                                    ) AS NVARCHAR(MAX)
+                                ),
+                                CHAR(13) + CHAR(10)
+                            ) WITHIN GROUP (ORDER BY X.Fecha DESC)
+                            AS HistorialMC
+                        FROM MC X
+                        WHERE X.IdPaciente = P.Id
+                          AND X.Clinica = P.Clinica
+                    ) MC
+
+                LEFT JOIN ROAS
+                    ON ROAS.IdPaciente = P.Id
+                    AND ROAS.Clinica = P.Clinica
+
+                LEFT JOIN Laboratorios LAB
+                    ON LAB.IdPaciente = P.Id
+                    AND LAB.Clinica = P.Clinica
+
+                LEFT JOIN ECG
+                    ON ECG.IdPaciente = P.Id
+                    AND ECG.Clinica = P.Clinica
+
+                LEFT JOIN Imagenes IMG
+                    ON IMG.IdPaciente = P.Id
+                    AND IMG.Clinica = P.Clinica
+
+                LEFT JOIN RiesgoCardiovascular RC
+                    ON RC.IdPaciente = P.Id
+                    AND RC.Clinica = P.Clinica
+
+                LEFT JOIN ImpresionDiagnostica ID
+                    ON ID.IdPaciente = P.Id
+                    AND ID.Clinica = P.Clinica
+
+                LEFT JOIN PlanTerapeutico PT
+                    ON PT.IdPaciente = P.Id
+                    AND PT.Clinica = P.Clinica
+
+                WHERE P.Clinica = @Clinica
+
+                ORDER BY UltimaFechaCita DESC;
+
+
+							";
+
+        //Historial Clinico por Pacientes, fecha inicio y fecha fin
+        public static string QueryVerHistorialClinico1 = @"                          							
               SELECT 
                 CONCAT(b.[Nombre], ' ', b.[Apellido]) AS NombrePaciente,
                  b.[Telefono], b.Genero, b.EstadoCivil,

@@ -51,22 +51,49 @@ namespace ClinicaAPI.Controllers
         [Route("EditarActividadFisica/{id}")]
         public async Task<IActionResult> EditarActividadFisica(int id, ActividadFisica model)
                 {
-                    try
+                    if (!ModelState.IsValid)
+                    {
+                        return BadRequest(ModelState);
+                    }
+            try
                     {
                         var userName = User.Identity?.Name ?? "Anonimo";
 
-                        using var connection = new System.Data.SqlClient.SqlConnection(
-                            Configuration.GetConnectionString("EntitiesContext")
-                        );
+                // =========================================================
+                // 1. VALIDAR SI VIENEN DATOS
+                // =========================================================
+                bool tieneDatos =
+                    model != null &&
+                    model.IdActividadFisica >= 0 && 
+                    !string.IsNullOrWhiteSpace(model.NivelActividadFisica) &&
+                    !string.IsNullOrWhiteSpace(model.Clinica);
 
-                        // =========================================================
-                        // 1. VALIDAR SI YA EXISTE EL REGISTRO
-                        // =========================================================
-                        const string sqlExiste = @"
+                // SI NO VIENEN DATOS -> NO HACER NADA
+                if (!tieneDatos)
+                {
+                    return Ok(new
+                    {
+                        mensaje = "No hay datos para guardar.",
+                        resultado = new List<MC>()
+                    });
+                }
+
+                using var connection = new System.Data.SqlClient.SqlConnection(
+                    Configuration.GetConnectionString("EntitiesContext")
+                );
+
+                await connection.OpenAsync();
+
+                // =========================================================
+                // 1. VALIDAR SI YA EXISTE EL REGISTRO
+                // =========================================================
+                const string sqlExiste = @"
                                     SELECT COUNT(1)
                                     FROM ActividadFisica
                                     WHERE IdPaciente = @IdPaciente
-                                      AND Clinica = @Clinica;
+                                      AND IdActividadFisica  = @IdActividadFisica 
+                                      AND NivelActividadFisica  = @NivelActividadFisica 
+                                      AND Clinica = @Clinica
                                 ";
 
                         var existe = await connection.ExecuteScalarAsync<int>(
@@ -74,6 +101,8 @@ namespace ClinicaAPI.Controllers
                             new
                             {
                                 IdPaciente = id,
+                                IdActividadFisica = model.IdActividadFisica,
+                                NivelActividadFisica = model.NivelActividadFisica,
                                 Clinica = model.Clinica
                             }
                         );
@@ -123,8 +152,9 @@ namespace ClinicaAPI.Controllers
                             new DynamicParameters();
 
                         parametrosEditar.Add("@IdPaciente", id);
+                        parametrosEditar.Add("@IdActividadFisica", model.IdActividadFisica);
                         parametrosEditar.Add("@Clinica", model.Clinica);
-                        parametrosEditar.Add("@Fecha", DateTime.Now);
+                        //parametrosEditar.Add("@Fecha", DateTime.Now);
 
                         parametrosEditar.Add(
                             "@NivelActividadFisica",
