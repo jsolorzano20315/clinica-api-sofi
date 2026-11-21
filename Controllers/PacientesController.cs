@@ -106,6 +106,7 @@ namespace ClinicaAPI.Controllers
                 parametrosPaciente.Add("@Apellido", paciente.Apellido);
                 parametrosPaciente.Add("@FechaNacimiento", paciente.FechaNacimiento);
                 parametrosPaciente.Add("@Fecha", fecha);
+                parametrosPaciente.Add("@FechaModificacion", paciente.FechaModificacion);  
                 parametrosPaciente.Add("@Telefono", paciente.Telefono);
                 parametrosPaciente.Add("@Genero", paciente.Genero);
                 parametrosPaciente.Add("@EstadoCivil", paciente.EstadoCivil);
